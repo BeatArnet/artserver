@@ -5,7 +5,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Any, TypedDict, cast
+from typing import Any, NotRequired, TypedDict, cast
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,10 +13,10 @@ CONTENT = ROOT / "content" / "pages"
 DIST = ROOT / "dist"
 
 
-class NavItem(TypedDict, total=False):
+class NavItem(TypedDict):
     label: str
     url: str
-    children: list["NavItem"]
+    children: NotRequired[list["NavItem"]]
 
 
 def parse_page(path: Path) -> tuple[dict[str, str], str]:
