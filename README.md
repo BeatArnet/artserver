@@ -46,7 +46,8 @@ Das Skript baut die Website, öffnet `http://127.0.0.1:4173/` und startet einen 
 
 - `/` Startseite
 - `/apps/` Anwendungsübersicht
-- `/produkte/` Arzttarif-Assistent
+- `/produkte/` Produktübersicht
+- `/arzttarif-assistent/` Arzttarif-Assistent
 - `/Tarifvergleich/` Tarifvergleich und Download
 - `/Quiz_NeuerArzttarif/` Spiel und Quiz Neuer Arzttarif
 - `/uber-uns/` Profil und Impressum-nahe Informationen

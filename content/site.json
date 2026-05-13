@@ -5,9 +5,10 @@
   "nav": [
     { "label": "STARTSEITE", "url": "/" },
     {
-      "label": "Neuer Arzttarif",
+      "label": "Produkte",
       "url": "/produkte/",
       "children": [
+        { "label": "Arzttarif-Assistent", "url": "/arzttarif-assistent/" },
         { "label": "Simulation: von Tarmed zu TARDOC/Pauschalen", "url": "/Tarifvergleich/" },
         { "label": "Spiel und Quiz Neuer Arzttarif", "url": "/Quiz_NeuerArzttarif/" }
       ]
