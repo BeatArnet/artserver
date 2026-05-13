@@ -1,8 +1,8 @@
 :root {
-  --bg: #ffffff;
+  --bg: #dceffb;
   --ink: #111111;
   --muted: #5e646b;
-  --line: #d8e8f2;
+  --line: #111111;
   --soft: #eef7fc;
   --soft-green: #edf9f4;
   --accent: #1b6f93;
@@ -42,18 +42,18 @@ a:hover {
 }
 
 .site-header {
-  border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 0;
+  background: #dceffb;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .header-inner {
-  max-width: var(--max);
+  max-width: 1200px;
   margin: 0 auto;
-  min-height: 76px;
-  padding: 0 22px;
+  min-height: 126px;
+  padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -66,13 +66,13 @@ a:hover {
   gap: 12px;
   color: var(--ink);
   text-decoration: none;
-  font-weight: 700;
+  font-size: 1.85rem;
+  font-weight: 800;
   letter-spacing: 0;
 }
 
 .brand img {
-  width: 46px;
-  height: 46px;
+  display: none;
 }
 
 .nav-toggle {
@@ -134,28 +134,70 @@ a:hover {
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 18px;
-  font-size: 0.96rem;
+  gap: 0;
+  font-size: 1.05rem;
+  background: #fff;
+  min-height: 64px;
+  padding: 0 68px;
 }
 
-.site-nav a {
+.site-nav a,
+.nav-item > a {
   color: var(--ink);
   text-decoration: none;
   border-bottom: 2px solid transparent;
-  padding: 8px 0;
+  padding: 20px 28px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 54px;
 }
 
 .site-nav a:hover,
-.site-nav a[aria-current="page"] {
-  border-bottom-color: var(--accent);
+.site-nav a[aria-current="page"],
+.nav-item > a[aria-current="page"] {
+  background: #c8c8c8;
+  color: #fff;
+  border-bottom-color: transparent;
+}
+
+.nav-item {
+  position: relative;
+}
+
+.has-menu > a::after {
+  content: "⌄";
+  padding-left: 10px;
+  font-size: 1rem;
+}
+
+.submenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 340px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.has-menu:hover .submenu,
+.has-menu:focus-within .submenu {
+  display: block;
+}
+
+.submenu a {
+  display: block;
+  padding: 14px 20px;
+  min-height: auto;
+  white-space: normal;
 }
 
 .hero {
-  min-height: 520px;
+  min-height: 595px;
   display: grid;
-  align-items: end;
+  align-items: center;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.82) 44%, rgba(255, 255, 255, 0.22) 100%),
+    linear-gradient(rgba(0, 35, 48, 0.34), rgba(0, 35, 48, 0.34)),
     var(--hero-image) center / cover no-repeat;
 }
 
@@ -163,11 +205,11 @@ a:hover {
   width: 100%;
   max-width: var(--max);
   margin: 0 auto;
-  padding: 88px 22px 72px;
+  padding: 80px 22px;
 }
 
 .hero-copy {
-  max-width: 680px;
+  max-width: 1120px;
 }
 
 .eyebrow {
@@ -188,16 +230,18 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(2.4rem, 5vw, 4.5rem);
-  font-weight: 800;
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  font-weight: 400;
 }
 
 h2 {
   font-size: clamp(1.8rem, 3vw, 2.7rem);
+  font-weight: 700;
 }
 
 h3 {
   font-size: 1.25rem;
+  font-weight: 400;
 }
 
 p {
@@ -205,8 +249,42 @@ p {
 }
 
 .lead {
-  font-size: 1.2rem;
-  color: #263238;
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  color: inherit;
+}
+
+.home-hero {
+  color: #fff;
+  text-align: center;
+}
+
+.home-hero h1 {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+}
+
+.home-hero .lead {
+  max-width: 1080px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-hero {
+  min-height: 520px;
+  align-items: center;
+  color: #111;
+  background:
+    linear-gradient(rgba(220, 239, 251, 0.68), rgba(220, 239, 251, 0.68)),
+    var(--hero-image) center / cover no-repeat;
+}
+
+.page-hero h1,
+.page-content h1 {
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  font-weight: 400;
+}
+
+.page-hero .hero-copy {
+  max-width: none;
 }
 
 .actions {
@@ -241,6 +319,7 @@ p {
 
 .section {
   padding: 74px 22px;
+  background: #dceffb;
 }
 
 .section.soft {
@@ -254,6 +333,19 @@ p {
 .section-inner {
   max-width: var(--max);
   margin: 0 auto;
+}
+
+.offer-section {
+  background:
+    linear-gradient(rgba(220, 239, 251, 0.88), rgba(220, 239, 251, 0.88)),
+    url("/assets/img/berater-stethoskop.webp") center / cover fixed;
+  text-align: center;
+}
+
+.section-lead {
+  font-size: 1.08rem;
+  max-width: 1050px;
+  margin: 0 auto 36px;
 }
 
 .split {
@@ -274,20 +366,48 @@ p {
 }
 
 .card {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 0;
+  border-radius: 0;
   background: #fff;
   overflow: hidden;
 }
 
 .card-body {
-  padding: 24px;
+  padding: 18px 22px;
+  text-align: center;
 }
 
 .card img {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
+  filter: grayscale(1);
+}
+
+.page-content {
+  background: #dceffb;
+}
+
+.page-content .section-inner > * + * {
+  margin-top: 24px;
+}
+
+.notice {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.54);
+  border-left: 4px solid #111;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 42px;
+  align-items: start;
+}
+
+.profile-section .image-frame {
+  position: sticky;
+  top: 150px;
 }
 
 .plain-list {
@@ -340,22 +460,23 @@ p {
 }
 
 .site-footer {
-  background: #0f1820;
-  color: #edf6fb;
-  padding: 44px 22px;
+  background: #dceffb;
+  color: #111;
+  padding: 50px 22px;
+  border-top: 1px solid #111;
 }
 
 .footer-inner {
   max-width: var(--max);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px;
   align-items: start;
 }
 
 .site-footer a {
-  color: #edf6fb;
+  color: #111;
 }
 
 .footer-links {
@@ -366,12 +487,16 @@ p {
 
 .small {
   font-size: 0.92rem;
-  color: #c8d9e2;
+  color: #111;
 }
 
 @media (max-width: 820px) {
   .header-inner {
-    min-height: 68px;
+    min-height: 74px;
+  }
+
+  .brand {
+    font-size: 1.35rem;
   }
 
   .nav-button {
@@ -383,7 +508,7 @@ p {
     position: absolute;
     left: 0;
     right: 0;
-    top: 68px;
+    top: 74px;
     padding: 14px 22px 20px;
     background: #fff;
     border-bottom: 1px solid var(--line);
@@ -400,10 +525,28 @@ p {
     padding: 10px 0;
   }
 
+  .nav-item > a {
+    padding: 10px 0;
+  }
+
+  .submenu {
+    display: block;
+    position: static;
+    min-width: 0;
+    box-shadow: none;
+    padding-left: 18px;
+  }
+
   .hero {
     min-height: 460px;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.82) 62%, rgba(255, 255, 255, 0.35) 100%),
+      linear-gradient(rgba(0, 35, 48, 0.42), rgba(0, 35, 48, 0.42)),
+      var(--hero-image) center / cover no-repeat;
+  }
+
+  .page-hero {
+    background:
+      linear-gradient(rgba(220, 239, 251, 0.74), rgba(220, 239, 251, 0.74)),
       var(--hero-image) center / cover no-repeat;
   }
 
@@ -419,8 +562,13 @@ p {
   .grid,
   .grid.two,
   .gallery,
-  .footer-inner {
+  .footer-inner,
+  .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-section .image-frame {
+    position: static;
   }
 
   .app-row {

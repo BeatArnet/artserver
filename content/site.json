@@ -1,14 +1,19 @@
 {
-  "siteName": "Arnet Konsilium",
+  "siteName": "Beat Arnet",
   "baseUrl": "https://www.arkons.ch",
-  "address": "Wydackerstrasse 42, 3052 Zollikofen",
+  "address": "Wydackerstrasse 41, 3052 Zollikofen",
   "nav": [
-    { "label": "Home", "url": "/" },
-    { "label": "Anwendungen", "url": "/apps/" },
-    { "label": "Arzttarif", "url": "/produkte/" },
-    { "label": "Tarifvergleich", "url": "/Tarifvergleich/" },
-    { "label": "Über uns", "url": "/uber-uns/" },
-    { "label": "Kontakt", "url": "/kontakt/" }
+    { "label": "STARTSEITE", "url": "/" },
+    {
+      "label": "Neuer Arzttarif",
+      "url": "/produkte/",
+      "children": [
+        { "label": "Simulation: von Tarmed zu TARDOC/Pauschalen", "url": "/Tarifvergleich/" },
+        { "label": "Spiel und Quiz Neuer Arzttarif", "url": "/Quiz_NeuerArzttarif/" }
+      ]
+    },
+    { "label": "ÜBER UNS", "url": "/uber-uns/" },
+    { "label": "KONTAKT", "url": "/kontakt/" }
   ],
   "footerLinks": [
     { "label": "Datenschutz", "url": "/privacy/" },

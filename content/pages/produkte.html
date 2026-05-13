@@ -1,39 +1,49 @@
 ---
 title: Arzttarif-Assistent
-description: Startseite für den Arzttarif-Assistenten.
+description: TARDOC und Pauschalen Assistent: Klarheit im neuen Arzttarif.
 path: /produkte/
 ---
   <main>
-    <section class="hero" style="--hero-image: url('/assets/img/hintergrund-verwaschen.png')">
+    <section class="hero page-hero" style="--hero-image: url('/assets/img/hintergrund-verwaschen.png')">
       <div class="hero-inner">
         <div class="hero-copy">
-          <p class="eyebrow">Anwendung</p>
           <h1>Arzttarif-Assistent</h1>
-          <p class="lead">Der Arzttarif-Assistent unterstützt die Arbeit mit ambulanten Tarifen. Diese Seite ist der stabile Einstiegspunkt zur separaten Anwendung.</p>
+          <p class="lead">TARDOC &amp; Pauschalen Assistent – Klarheit im neuen Arzttarif</p>
+          <p>Navigieren Sie sicher durch den Schweizer Arzttarif! Der Arzttarif-Assistent analysiert Ihre Freitextbeschreibung der erbrachten medizinischen Leistung – optional mit ICD-, GTIN- oder CHOP-Codes – mithilfe von Google Gemini. Alle Treffer werden lokal gegen sämtliche TARDOC- und Pauschalenregeln geprüft, sodass Sie rasch erfahren, ob eine Leistung als Pauschale oder mit TARDOC-Einzelleistungen abgerechnet wird. Die Oberfläche steht in Deutsch, Französisch und Italienisch zur Verfügung.</p>
           <div class="actions">
             <a class="button primary" href="https://arnet.internet-box.ch:4444">Anwendung starten</a>
-            <a class="button" href="https://github.com/BeatArnet/Arzttarif-Assistent">Quellcode öffnen</a>
           </div>
         </div>
       </div>
     </section>
-    <section class="section">
-      <div class="section-inner split">
+    <section class="section page-content">
+      <div class="section-inner">
         <div>
-          <h2>Einordnung</h2>
-          <p>Die Fachanwendung wird nicht in dieser Website nachgebaut. arkons.ch stellt nur eine robuste, gut auffindbare Startseite bereit.</p>
+          <h2>Was der Assistent bietet</h2>
           <ul class="plain-list">
-            <li>Startlink zur laufenden Anwendung</li>
-            <li>Verweise auf offizielle Tarifinformationen</li>
-            <li>Platz für spätere Hinweise oder Versionsinformationen</li>
+            <li>Umfassende Anzeigen über alle Einzelleistungen und Pauschalen</li>
+            <li>Aktuelle Tarifbasis OAAT-OTMA AG</li>
+            <li>Umfangreiche Prüfalgorithmen</li>
+            <li>CHOP- und ICD-Lookups mit automatischer Übernahme</li>
+            <li>Ein Quiz zum Lernen</li>
           </ul>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h3>Externe Referenzen</h3>
-            <p><a href="https://tarifbrowser.oaat-otma.ch/startPortal">OAAT-Tarifbrowser</a></p>
-            <p><a href="https://www.tarifeambulant.fmh.ch/">FMH Tarife ambulant</a></p>
-          </div>
+        <div>
+          <h2>Projekt &amp; Ressourcen</h2>
+          <ul class="plain-list">
+            <li>Hauptrepository: <a href="https://github.com/BeatArnet/Arzttarif-Assistent">https://github.com/BeatArnet/Arzttarif-Assistent</a></li>
+            <li>Offizieller OAAT-Tarifbrowser: <a href="https://tarifbrowser.oaat-otma.ch/startPortal">https://tarifbrowser.oaat-otma.ch/startPortal</a></li>
+            <li>Tarifplattform der FMH: <a href="https://www.tarifeambulant.fmh.ch/">https://www.tarifeambulant.fmh.ch/</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Worauf Sie achten sollten</h2>
+          <ul class="plain-list">
+            <li>Der Arzttarif-Assistent ist ein Open-Source-Prototyp ohne Gewähr; Resultate können Fehler enthalten und sind nicht verbindlich</li>
+            <li>Für verbindliche Tarifinformationen konsultieren Sie bitte den offiziellen OAAT-Tarifbrowser oder die Tarifplattform der FMH</li>
+            <li>Keine persönlichen Daten eingeben – die KI-Abfragen laufen über Google Gemini</li>
+            <li>Tarifbasis: OAAT-OTMA AG, Tarifversion 1.1c vom 28.11.2025</li>
+          </ul>
         </div>
       </div>
     </section>

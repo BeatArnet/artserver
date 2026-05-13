@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tarifvergleich | Arnet Konsilium</title>
-  <meta name="description" content="Simulation Tarifvergleich als lokaler Download.">
+  <title>Tarifvergleich | Beat Arnet</title>
+  <meta name="description" content="Von TARMED zu TARDOC/Pauschalen.">
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/styles.css">
 </head>
@@ -12,8 +12,8 @@
   <header class="site-header">
     <div class="header-inner">
       <a class="brand" href="/">
-        <img src="/assets/img/arkons-logo.png" alt="Arnet Konsilium Logo">
-        <span>Arnet Konsilium</span>
+        <img src="/assets/img/arkons-logo.png" alt="Beat Arnet Logo">
+        <span>Beat Arnet</span>
       </a>
       <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Navigation anzeigen">
       <label class="nav-button" for="nav-toggle">
@@ -21,47 +21,61 @@
         <span class="visually-hidden">Navigation anzeigen</span>
       </label>
       <nav class="site-nav" aria-label="Hauptnavigation">
-        <a href="/">Home</a>
-        <a href="/apps/">Anwendungen</a>
-        <a href="/produkte/">Arzttarif</a>
-        <a href="/Tarifvergleich/" aria-current="page">Tarifvergleich</a>
-        <a href="/uber-uns/">Über uns</a>
-        <a href="/kontakt/">Kontakt</a>
+        <a href="/">STARTSEITE</a>
+        <div class="nav-item has-menu"><a href="/produkte/" aria-current="page">Neuer Arzttarif</a><div class="submenu">
+            <a href="/Tarifvergleich/">Simulation: von Tarmed zu TARDOC/Pauschalen</a>
+            <a href="/Quiz_NeuerArzttarif/">Spiel und Quiz Neuer Arzttarif</a>
+          </div></div>
+        <a href="/uber-uns/">ÜBER UNS</a>
+        <a href="/kontakt/">KONTAKT</a>
       </nav>
     </div>
   </header>
 
 <main>
-    <section class="hero" style="--hero-image: url('/assets/img/tarifvergleich-hauptformular.png')">
-      <div class="hero-inner">
-        <div class="hero-copy">
-          <p class="eyebrow">Simulation</p>
-          <h1>Tarifvergleich</h1>
-          <p class="lead">Die Anwendung vergleicht Tarifsituationen anhand importierter Daten und stellt Unterschiede nachvollziehbar dar.</p>
-          <div class="actions">
-            <a class="button primary" href="/downloads/Tarifvergleich.zip">Download</a>
-            <a class="button" href="/apps/">Zur Anwendungsübersicht</a>
-          </div>
+    <section class="section page-content">
+      <div class="section-inner">
+        <h1>Von TARMED zu TARDOC/Pauschalen</h1>
+        <div class="actions">
+          <a class="button primary" href="/downloads/Tarifvergleich.zip">Anwendung Tarifvergleich herunterladen</a>
+        </div>
+        <p>Die Datenbankanwendung „Tarifvergleich“ und die Python-Skripts werden von Beat Arnet (arkons.ch) entwickelt und als Open Source kostenlos zur Verfügung gestellt. Die Software darf frei heruntergeladen, genutzt, verändert und erweitert werden. Die MS-Access Umgebung und Python müssen separat installiert werden und unterliegen eigenen Lizenzbedingungen. Weitergabe an Dritte ist erlaubt, sofern stets der ursprüngliche Autor angegeben wird: Beat Arnet (arkons.ch).</p>
+        <p>Neu in Version 1.2: kantons- und leistungserbringertypspezifische Taxpunktwerte und Frankenbeträge. Achtung: Aktuell sind weder die Taxpunktwerte noch das Konzept bekannt. Es sind rein hypothetische Werte hinterlegt, die selber leicht angepasst werden können.</p>
+        <div class="notice">
+          <h2>Unterstützung von Beat Arnet</h2>
+          <p>Sie möchten bei der Installation, Anpassung oder Nutzung der Anwendung nicht alleine gelassen werden? Beat Arnet steht Ihnen gerne mit professionellem Support zur Seite. Wir bieten unkomplizierte und persönliche Unterstützung via MS Teams oder Telefon an – kompetent, effizient und genau dann, wenn Sie Hilfe benötigen.</p>
+          <p>Zögern Sie nicht, uns für eine individuelle Offerte zu kontaktieren. Wir freuen uns darauf, Sie optimal zu unterstützen!</p>
+          <p>Kontakt: <a href="mailto:beat.arnet@bluewin.ch">beat.arnet@bluewin.ch</a></p>
         </div>
       </div>
     </section>
     <section class="section">
       <div class="section-inner">
-        <h2>Funktionen</h2>
+        <h2>Tarifvergleich</h2>
+        <p>Sie wollen wissen, welche finanziellen Auswirkungen der neue Arzttarif für Sie hat.</p>
+        <p>Die Datenbank transcodiert Ihre Tarmed-Rechnungen und gibt Ihnen einen Überblick vom Tarmed zum neuen Arzttarif mit Pauschalen und Einzelleistungen.</p>
+        <p>Sie kennen anschliessend:</p>
+        <ul class="plain-list">
+          <li>Die finanziellen Auswirkungen</li>
+          <li>Die für Sie relevanten Pauschalen</li>
+          <li>Die für Sie wichtigsten TARDOC-Einzelleistungen</li>
+        </ul>
         <div class="grid">
           <article class="card">
             <img src="/assets/img/tarifvergleich-vergleich.png" alt="Ansicht Vergleich">
-            <div class="card-body"><h3>Vergleichen</h3><p>Vergleichsansichten machen Abweichungen zwischen Tarifständen sichtbar.</p></div>
+            <div class="card-body"><h3>Vergleich neuer zu alter Tarif</h3><p>In der Auswertungsansicht wird Ihnen das Ergebnis detailliert präsentiert: Gesamtanzahl der verarbeiteten Rechnungen und Fälle, Gesamttaxpunkte vor und nach der Transcodierung und Vergleichswerte zwischen altem und neuem Arzttarif.</p></div>
           </article>
           <article class="card">
             <img src="/assets/img/tarifvergleich-filtern.png" alt="Ansicht Filtern">
-            <div class="card-body"><h3>Filtern</h3><p>Filter helfen, relevante Leistungen und Positionen gezielt zu prüfen.</p></div>
+            <div class="card-body"><h3>Ihre Rechnungen nach unterschiedlichsten Kriterien filtern</h3><p>Stratifizieren Sie nach Belieben. Dadurch erhalten Sie neue Erkenntnisse, wie die Auswirkungen für bestimmte Spezialisierungen, Altersgruppen, Kantone, Prämienregionen, etc. sind.</p></div>
           </article>
           <article class="card">
             <img src="/assets/img/tarifvergleich-transcodierung.png" alt="Ansicht Transcodierung">
-            <div class="card-body"><h3>Transcodieren</h3><p>Transcodierungsansichten unterstützen die fachliche Nachvollziehbarkeit.</p></div>
+            <div class="card-body"><h3>Transcodieren (mit den Tools von OAAT)</h3><p>Die Transcodierung zu Pauschalen und TARDOC-Einzelleistungen übernehmen Werkzeuge der OAAT-OTMA AG. Die Tools wurden nahtlos integriert. Sie müssen sich um nichts kümmern.</p></div>
           </article>
         </div>
+        <p>Und sobald das Konzept für den Taxpunktwert bekannt ist, werden Sie direkte Vergleiche zwischen «Betrag TARMED» und «Betrag neuer Arzttarif» machen können.</p>
+        <p>Alle durchgeführten Stratifizierungen stehen Ihnen jederzeit in einzelnen Tabellenblättern zur Verfügung.</p>
       </div>
     </section>
   </main>
@@ -69,8 +83,9 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div>
-        <strong>Arnet Konsilium</strong>
-        <p class="small">Wydackerstrasse 42, 3052 Zollikofen</p>
+        <strong>Beat Arnet</strong>
+        <p class="small">Adresse<br>Wydackerstrasse 41, 3052 Zollikofen</p>
+        <p class="small">Kontakt<br><a href="mailto:beat.arnet@bluewin.ch">beat.arnet@bluewin.ch</a><br>M: +41 79 321 89 36</p>
       </div>
       <div class="footer-links">
         <a href="/privacy/">Datenschutz</a>

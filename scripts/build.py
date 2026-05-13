@@ -5,11 +5,18 @@ import json
 import os
 import shutil
 from pathlib import Path
+from typing import Any, TypedDict, cast
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTENT = ROOT / "content" / "pages"
 DIST = ROOT / "dist"
+
+
+class NavItem(TypedDict, total=False):
+    label: str
+    url: str
+    children: list["NavItem"]
 
 
 def parse_page(path: Path) -> tuple[dict[str, str], str]:
@@ -29,13 +36,24 @@ def parse_page(path: Path) -> tuple[dict[str, str], str]:
     return meta, body.strip()
 
 
-def render_links(items: list[dict[str, str]], current: str, nav: bool) -> str:
+def render_links(items: list[NavItem], current: str, nav: bool) -> str:
     lines = []
     for item in items:
         label = html.escape(item["label"])
         url = item["url"]
-        current_attr = ' aria-current="page"' if nav and url == current else ""
-        lines.append(f'        <a href="{url}"{current_attr}>{label}</a>')
+        children = item.get("children", [])
+        active = url == current or any(child["url"] == current for child in children)
+        current_attr = ' aria-current="page"' if nav and active else ""
+        if nav and children:
+            child_links = "\n".join(
+                f'            <a href="{child["url"]}">{html.escape(child["label"])}</a>'
+                for child in children
+            )
+            lines.append(
+                f'        <div class="nav-item has-menu"><a href="{url}"{current_attr}>{label}</a><div class="submenu">\n{child_links}\n          </div></div>'
+            )
+        else:
+            lines.append(f'        <a href="{url}"{current_attr}>{label}</a>')
     return "\n".join(lines)
 
 
@@ -65,7 +83,10 @@ def remove_tree(path: Path) -> None:
 
 
 def main() -> None:
-    site = json.loads((ROOT / "content" / "site.json").read_text(encoding="utf-8"))
+    site = cast(
+        dict[str, Any],
+        json.loads((ROOT / "content" / "site.json").read_text(encoding="utf-8")),
+    )
     template = (ROOT / "templates" / "base.html").read_text(encoding="utf-8")
 
     if DIST.exists():
@@ -87,8 +108,10 @@ def main() -> None:
             "{{ description }}": html.escape(meta["description"]),
             "{{ siteName }}": html.escape(site["siteName"]),
             "{{ address }}": html.escape(site["address"]),
-            "{{ nav }}": render_links(site["nav"], current, True),
-            "{{ footerLinks }}": render_links(site["footerLinks"], current, False),
+            "{{ nav }}": render_links(cast(list[NavItem], site["nav"]), current, True),
+            "{{ footerLinks }}": render_links(
+                cast(list[NavItem], site["footerLinks"]), current, False
+            ),
             "{{ body }}": body,
         }
         for marker, value in replacements.items():
