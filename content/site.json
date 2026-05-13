@@ -1,0 +1,17 @@
+{
+  "siteName": "Arnet Konsilium",
+  "baseUrl": "https://www.arkons.ch",
+  "address": "Wydackerstrasse 42, 3052 Zollikofen",
+  "nav": [
+    { "label": "Home", "url": "/" },
+    { "label": "Anwendungen", "url": "/apps/" },
+    { "label": "Arzttarif", "url": "/produkte/" },
+    { "label": "Tarifvergleich", "url": "/Tarifvergleich/" },
+    { "label": "Über uns", "url": "/uber-uns/" },
+    { "label": "Kontakt", "url": "/kontakt/" }
+  ],
+  "footerLinks": [
+    { "label": "Datenschutz", "url": "/privacy/" },
+    { "label": "Kontakt", "url": "/kontakt/" }
+  ]
+}

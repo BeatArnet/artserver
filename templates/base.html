@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}">
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <img src="/assets/img/arkons-logo.png" alt="Arnet Konsilium Logo">
+        <span>{{ siteName }}</span>
+      </a>
+      <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Navigation anzeigen">
+      <label class="nav-button" for="nav-toggle">
+        <span aria-hidden="true"></span>
+        <span class="visually-hidden">Navigation anzeigen</span>
+      </label>
+      <nav class="site-nav" aria-label="Hauptnavigation">
+{{ nav }}
+      </nav>
+    </div>
+  </header>
+
+{{ body }}
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>{{ siteName }}</strong>
+        <p class="small">{{ address }}</p>
+      </div>
+      <div class="footer-links">
+{{ footerLinks }}
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
