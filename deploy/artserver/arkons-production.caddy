@@ -1,0 +1,9 @@
+# arkons-managed: production HTTPS site for the DNS cutover.
+# Enable this only after arkons.ch and www.arkons.ch point to artserver
+# and router/firewall traffic for TCP 80/443 reaches Caddy.
+
+arkons.ch, www.arkons.ch {
+	encode zstd gzip
+	root * /home/art/arkons/www/current
+	file_server
+}

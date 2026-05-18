@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "description": "Zentrale Konfiguration für die Arkons-Admin-Oberfläche. Diese Datei beschreibt Bereiche, Anwendungen, Ports, Healthchecks und die zugehörigen Skript-IDs.",
+  "adminGui": {
+    "id": "arkons-admin",
+    "label": "Arkons Admin",
+    "repository": "artserver",
+    "containerName": "arkons-admin",
+    "internalUrl": "http://127.0.0.1:18010",
+    "recommendedPublicUrl": "https://admin.arkons.ch/",
+    "accessPolicy": "Nur LAN oder VPN. Kein öffentlicher Zugriff ohne zusätzliche Absicherung.",
+    "localLauncher": "artserver-admin-web.cmd",
+    "notes": "Die Admin-Oberfläche läuft auf artserver. Das lokale CMD kann SSH-Tunnel und Browserstart vorbereiten."
+  },
+  "areas": [
+    {
+      "id": "overview",
+      "label": "Übersicht",
+      "kind": "dashboard",
+      "navigation": true,
+      "summary": "Gesamtstatus von artserver, Website, Docker und Anwendungen.",
+      "scriptIds": [
+        "admin.artserver.menu"
+      ]
+    },
+    {
+      "id": "website",
+      "label": "Webseite",
+      "kind": "website",
+      "navigation": true,
+      "repository": "artserver",
+      "publicUrl": "https://arkons.ch/",
+      "previewUrl": "http://192.168.1.136/",
+      "summary": "Statische Arkons-Webseite mit lokalem Build und Release-Deploy nach artserver.",
+      "statusChecks": [
+        {
+          "id": "website.preview",
+          "label": "LAN-Vorschau",
+          "type": "httpHead",
+          "url": "http://127.0.0.1/",
+          "hostHeader": "arkons.ch"
+        }
+      ],
+      "scriptIds": [
+        "admin.artserver.menu"
+      ],
+      "humanNotes": "Die Webseite ist aktuell der Bereich ausserhalb der App-Container. Sie wird als statisches Release gebaut und über Caddy ausgeliefert."
+    },
+    {
+      "id": "artserver",
+      "label": "artserver",
+      "kind": "server",
+      "navigation": true,
+      "summary": "Serverstatus, Caddy, Docker, Speicher, Updates, SSH und zentrale Skripte.",
+      "statusChecks": [
+        { "id": "caddy.active", "label": "Caddy aktiv", "type": "systemd", "service": "caddy" },
+        { "id": "docker.active", "label": "Docker aktiv", "type": "systemd", "service": "docker" }
+      ],
+      "scriptIds": [
+        "admin.artserver.menu"
+      ],
+      "humanNotes": "Dieser Bereich ist für alles zuständig, was nicht direkt zu einer einzelnen Fachanwendung gehört."
+    },
+    {
+      "id": "arzttarif",
+      "label": "Arzttarif",
+      "kind": "application",
+      "navigation": true,
+      "repository": "Arzttarif_Assistent_dev",
+      "github": "https://github.com/BeatArnet/Arzttarif_Assistent_dev",
+      "containerNames": ["Arzttarif"],
+      "internalUrls": ["http://127.0.0.1:18000"],
+      "healthChecks": [
+        {
+          "id": "arzttarif.version",
+          "label": "Arzttarif API-Version",
+          "type": "httpJson",
+          "url": "http://127.0.0.1:18000/api/version"
+        }
+      ],
+      "scriptIds": [
+        "admin.arzttarif.entrypoints",
+        "arzttarif.deploy.local",
+        "arzttarif.merge.to.main",
+        "arzttarif.cleanup.branches",
+        "arzttarif.copy.dev.to.operativ",
+        "arzttarif.normalize.encoding",
+        "arzttarif.prune.synonyms",
+        "arzttarif.clean.json",
+        "arzttarif.update.github"
+      ],
+      "humanNotes": "Der Arzttarif-Assistent ist produktiv im Container. Das normale Server-Update soll aus GitHub erfolgen; der lokale Entwicklungsordner-Deploy bleibt für bewusste Sonderfälle."
+    },
+    {
+      "id": "menueplan",
+      "label": "Menüplan",
+      "kind": "application",
+      "navigation": true,
+      "repository": "Menueplan",
+      "github": "https://github.com/BeatArnet/Menueplan",
+      "containerNames": ["Menueplan"],
+      "internalUrls": ["http://127.0.0.1:18001"],
+      "healthChecks": [
+        {
+          "id": "menueplan.status",
+          "label": "Menüplan Status-API",
+          "type": "httpJson",
+          "url": "http://127.0.0.1:18001/api.php?type=status"
+        }
+      ],
+      "scriptIds": [
+        "admin.menueplan.entrypoints",
+        "menueplan.update.github",
+        "menueplan.backup",
+        "menueplan.smoke.docker",
+        "menueplan.restore",
+        "menueplan.sync.data.from.artserver",
+        "menueplan.local.start",
+        "menueplan.export.cert",
+        "menueplan.fix.data.permissions",
+        "menueplan.common.library"
+      ],
+      "humanNotes": "Der Menüplan ist eine häufig genutzte Alltagsanwendung. Updates und Neustarts sollen kurz bleiben und idealerweise mit vorherigem Backup erfolgen."
+    },
+    {
+      "id": "robowait",
+      "label": "RoboWait",
+      "kind": "application",
+      "navigation": true,
+      "repository": "RoboWait",
+      "github": "https://github.com/BeatArnet/RoboWait",
+      "containerNames": [
+        "robowait-docker-web",
+        "robowait-docker-reverb",
+        "robowait-docker-scheduler"
+      ],
+      "internalUrls": [
+        "http://127.0.0.1:18002",
+        "tcp://127.0.0.1:18003"
+      ],
+      "healthChecks": [
+        {
+          "id": "robowait.web",
+          "label": "RoboWait Web",
+          "type": "httpHead",
+          "url": "http://127.0.0.1:18002/"
+        },
+        {
+          "id": "robowait.reverb",
+          "label": "RoboWait Reverb-Port",
+          "type": "tcp",
+          "host": "127.0.0.1",
+          "port": 18003
+        }
+      ],
+      "scriptIds": [
+        "admin.robowait.menu",
+        "robowait.update.github",
+        "robowait.backup",
+        "robowait.smoke.docker",
+        "robowait.restore",
+        "robowait.local.dev.start",
+        "robowait.local.git.sync",
+        "robowait.local.install.git.hooks",
+        "robowait.local.render.docs",
+        "robowait.local.render.svg.to.png",
+        "robowait.local.export.markdown.docx",
+        "robowait.local.postprocess.docx",
+        "robowait.local.statistics.validator",
+        "robowait.local.export.screenshot.todo",
+        "robowait.local.flash.esp32",
+        "robowait.local.build.android.vision.host",
+        "robowait.local.install.android.vision.host",
+        "robowait.participant.export.fallback"
+      ],
+      "humanNotes": "RoboWait besteht aus Web, Reverb und Scheduler. Die Admin-Oberfläche muss diese drei Teile getrennt anzeigen."
+    }
+  ]
+}

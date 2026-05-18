@@ -1,0 +1,819 @@
+{
+  "version": 1,
+  "description": "Zentraler Arkons-Skriptkatalog. Diese Datei ist bewusst maschinenlesbar, damit später auch eine Weboberfläche daraus Buttons und Sicherheitsabfragen erzeugen kann.",
+  "scripts": [
+    {
+      "id": "admin.artserver.menu",
+      "group": "Projekt-Admin-Einstiege",
+      "label": "artserver zentrale Kommandozentrale",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.cmd",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Zentrale Startseite für Website, Caddy, Docker, Backups, Checks und die Projekt-Admin-Einstiege.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.cmd",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": []
+      }
+    },
+    {
+      "id": "admin.robowait.menu",
+      "group": "Projekt-Admin-Einstiege",
+      "label": "RoboWait Admin-Menü",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\robowait-admin.cmd",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "",
+      "notes": "Anwendungsspezifisches RoboWait-Menü für Zielsystem, Logs, Dokumentation, Roboter und Spezialaufgaben.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\robowait-admin.cmd",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "admin.menueplan.entrypoints",
+      "group": "Projekt-Admin-Einstiege",
+      "label": "Menüplan Admin-/Deploy-Skripte",
+      "source": "{ProjectsRoot}\\Menueplan\\Deploy-To-Artserver.ps1; {ProjectsRoot}\\Menueplan\\Sync-Data-From-Artserver.ps1; {ProjectsRoot}\\Menueplan\\Start_Menüplan.bat",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "",
+      "notes": "Menüplan hat kein separates Admin-Menü; die zentralen Einstiegspunkte sind Deploy, Daten-Sync und lokaler Start. Einzelne startbare Einträge stehen zusätzlich in der Gruppe Menüplan.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "{ProjectsRoot}\\Menueplan\\Start_Menüplan.bat",
+        "cwd": "{ProjectsRoot}\\Menueplan",
+        "args": []
+      }
+    },
+    {
+      "id": "admin.arzttarif.entrypoints",
+      "group": "Projekt-Admin-Einstiege",
+      "label": "Arzttarif Admin-/Deploy-Skripte",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\Deploy-Docker-To-Artserver.ps1; {ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\git-merge-to-main.ps1; {ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\cleanup-branches-main.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "",
+      "notes": "Arzttarif hat kein separates Admin-Menü; die zentralen Einstiegspunkte sind Docker-Deploy und Git-Helfer. Einzelne startbare Einträge stehen zusätzlich in der Gruppe Arzttarif.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\Deploy-Docker-To-Artserver.ps1",
+        "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
+        "args": []
+      }
+    },
+    {
+      "id": "menueplan.update.github",
+      "group": "Menüplan",
+      "label": "Menüplan Docker-Update aus GitHub",
+      "source": "/home/art/arkons/deploy/artserver/docker/update-menueplan-github.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "MENUEPLAN",
+      "notes": "Produktiver Menüplan-Code wird aus GitHub aktualisiert und der Docker-Container neu gestartet.",
+      "summary": "Aktualisiert den produktiven Menüplan auf artserver aus dem GitHub-Repository.",
+      "details": "Das Skript holt auf artserver den neuesten Stand des Menüplan-Repositories, erstellt daraus einen Deployment-Snapshot und synchronisiert nur den Code nach /opt/apps/Menueplan. Produktive Daten wie data/, .env, smtp_config.php und Zertifikate bleiben stehen. Danach werden Datenrechte geprüft, der Docker-Container wird neu gestartet und der Smoke-Test wird ausgeführt.",
+      "whenToUse": "Wenn Änderungen am Menüplan in GitHub bereitstehen und produktiv auf artserver übernommen werden sollen.",
+      "beforeStart": [
+        "Prüfen, ob der Menüplan gerade aktiv zum Kochen verwendet wird.",
+        "Bei grösseren Änderungen vorher ein Backup starten.",
+        "Sicherstellen, dass GitHub-Zugang und Docker auf artserver funktionieren."
+      ],
+      "effect": [
+        "Code unter /opt/apps/Menueplan wird aktualisiert.",
+        "Daten, .env, SMTP-Konfiguration und Zertifikate werden nicht überschrieben.",
+        "Der Container Menueplan wird neu gestartet.",
+        "Der Docker-Smoke-Test prüft die Erreichbarkeit."
+      ],
+      "successCriteria": [
+        "Der Smoke-Test endet erfolgreich.",
+        "Die Status-API antwortet.",
+        "Die öffentliche Menüplan-Seite bleibt erreichbar."
+      ],
+      "rollback": "Bei Fehlern zuerst das Job-Log lesen. Wenn der Container nicht mehr startet, kann der vorherige Git-Stand im Repository /opt/apps/Menueplan wiederhergestellt und der Container neu gestartet werden. Daten sollten unverändert geblieben sein.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/home/art/arkons/deploy/artserver/docker",
+        "command": "bash update-menueplan-github.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "menueplan.smoke.docker",
+      "group": "Menüplan",
+      "label": "Menüplan Docker-Smoke-Test",
+      "source": "/home/art/arkons/deploy/artserver/docker/smoke-menueplan.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Prüft den laufenden Menüplan-Container.",
+      "summary": "Prüft, ob der Menüplan-Container auf artserver korrekt antwortet.",
+      "details": "Der Smoke-Test ruft den internen Docker-Port 127.0.0.1:18001 ab, prüft die Startseite beziehungsweise Status-Antwort und kontrolliert, ob sensible Datenpfade nicht öffentlich ausgeliefert werden.",
+      "whenToUse": "Nach Updates, Neustarts, Caddy-Änderungen oder wenn der Menüplan im Browser auffällig langsam oder nicht erreichbar ist.",
+      "effect": [
+        "Es werden nur HTTP-Prüfungen ausgeführt.",
+        "Der Container wird nicht verändert.",
+        "Es werden keine Daten geschrieben."
+      ],
+      "successCriteria": [
+        "HTTP-Antwort ist erfolgreich.",
+        "Status-Endpunkt antwortet.",
+        "Blockierte Datenpfade bleiben blockiert."
+      ],
+      "rollback": "Kein Rollback nötig, weil der Smoke-Test nichts verändert.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/home/art/arkons/deploy/artserver/docker",
+        "command": "bash smoke-menueplan.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "menueplan.backup",
+      "group": "Menüplan",
+      "label": "Menüplan Backup",
+      "source": "/opt/apps/Menueplan/ops/backup.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Erstellt ein Menüplan-Backup auf artserver.",
+      "summary": "Erstellt ein Backup der produktiven Menüplan-Daten.",
+      "details": "Das Backup-Skript sichert die wichtigen Daten des Menüplans auf artserver. Es ist der empfohlene Schritt vor grösseren Updates oder vor Arbeiten, bei denen Daten verändert werden könnten.",
+      "whenToUse": "Vor Menüplan-Updates, vor Restore-Tests, vor manuellem Eingriff in Daten oder zusätzlich zu automatischen Backups.",
+      "beforeStart": [
+        "Prüfen, ob genug Speicherplatz auf artserver vorhanden ist.",
+        "Bei sehr wichtigen Änderungen das Backup nach dem Lauf im Log kontrollieren."
+      ],
+      "effect": [
+        "Produktive Menüplan-Daten werden gelesen.",
+        "Ein neues Backup wird im Backup-Ziel abgelegt.",
+        "Die laufende Anwendung wird normalerweise nicht unterbrochen."
+      ],
+      "successCriteria": [
+        "Das Skript endet mit Exitcode 0.",
+        "Im Log steht der Pfad des neuen Backups.",
+        "Der Menüplan bleibt erreichbar."
+      ],
+      "rollback": "Kein Rollback nötig. Falls das Backup fehlschlägt, Log prüfen und vor riskanten Arbeiten kein Update starten.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Menueplan",
+        "command": "bash ops/backup.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "menueplan.sync.data.from.artserver",
+      "group": "Menüplan",
+      "label": "Menüplan Daten vom artserver synchronisieren",
+      "source": "{ProjectsRoot}\\Menueplan\\Sync-Data-From-Artserver.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "SYNC",
+      "notes": "Holt produktive Menüplan-Daten auf den Entwicklungsrechner. Vorher prüfen, ob lokale Testdaten überschrieben werden dürfen.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\Menueplan\\Sync-Data-From-Artserver.ps1",
+        "cwd": "{ProjectsRoot}\\Menueplan",
+        "args": []
+      }
+    },
+    {
+      "id": "menueplan.local.start",
+      "group": "Menüplan",
+      "label": "Menüplan lokal starten",
+      "source": "{ProjectsRoot}\\Menueplan\\Start_Menüplan.bat",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Startet die lokale Menüplan-Entwicklungsumgebung.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "{ProjectsRoot}\\Menueplan\\Start_Menüplan.bat",
+        "cwd": "{ProjectsRoot}\\Menueplan",
+        "args": []
+      }
+    },
+    {
+      "id": "menueplan.restore",
+      "group": "Menüplan",
+      "label": "Menüplan Restore",
+      "source": "/opt/apps/Menueplan/ops/restore.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "RESTORE",
+      "notes": "Kann produktive Menüplan-Daten zurückspielen. Nur bewusst starten.",
+      "summary": "Stellt Menüplan-Daten aus einem Backup wieder her.",
+      "details": "Ein Restore kann bestehende produktive Daten überschreiben. Dieser Punkt ist für echte Wiederherstellungen gedacht, nicht für normale Wartung. Vor dem Start muss klar sein, welches Backup zurückgespielt werden soll und welche aktuellen Daten dadurch ersetzt werden.",
+      "whenToUse": "Nur wenn Daten beschädigt sind, versehentlich gelöscht wurden oder ein bewusst gewählter früherer Stand wiederhergestellt werden soll.",
+      "beforeStart": [
+        "Aktuellen Zustand sichern, falls noch lesbar.",
+        "Gewünschtes Backup eindeutig identifizieren.",
+        "Akzeptieren, dass aktuelle Daten überschrieben werden können."
+      ],
+      "effect": [
+        "Produktive Menüplan-Daten können ersetzt werden.",
+        "Je nach Skript kann der Dienst danach neu geprüft werden müssen."
+      ],
+      "successCriteria": [
+        "Restore endet erfolgreich.",
+        "Menüplan startet und zeigt die erwarteten Daten.",
+        "Smoke-Test ist erfolgreich."
+      ],
+      "rollback": "Wenn ein falsches Backup eingespielt wurde, muss ein anderes Backup zurückgespielt werden. Darum vor Restore immer aktuellen Zustand sichern.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Menueplan",
+        "command": "bash ops/restore.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "menueplan.export.cert",
+      "group": "Menüplan",
+      "label": "Menüplan Zertifikat exportieren",
+      "source": "/opt/apps/Menueplan/ops/export_cert.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "CERT",
+      "notes": "Exportiert Zertifikatsmaterial. Ausgabe vertraulich behandeln.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Menueplan",
+        "command": "bash ops/export_cert.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "menueplan.fix.data.permissions",
+      "group": "Menüplan",
+      "label": "Menüplan Datenrechte reparieren",
+      "source": "/opt/apps/Menueplan/ops/fix_data_permissions.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "PERMISSIONS",
+      "notes": "Korrigiert Dateirechte im Menüplan-Datenbereich.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Menueplan",
+        "command": "sudo bash ops/fix_data_permissions.sh",
+        "sudo": true
+      }
+    },
+    {
+      "id": "menueplan.common.library",
+      "group": "Menüplan",
+      "label": "Menüplan Shell-Bibliothek",
+      "source": "/opt/apps/Menueplan/ops/lib/common.sh",
+      "location": "artserver",
+      "enabled": false,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Hilfsbibliothek für andere Skripte, nicht direkt starten.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Menueplan",
+        "command": "bash ops/lib/common.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "robowait.update.github",
+      "group": "RoboWait",
+      "label": "RoboWait Update aus GitHub",
+      "source": "/opt/apps/robowait/scripts/update-artserver.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "ROBOWAIT",
+      "notes": "Aktualisiert RoboWait aus GitHub und erneuert je nach Betriebsmodus Container oder Host-Dienste.",
+      "summary": "Aktualisiert RoboWait aus GitHub und bringt die laufenden Dienste auf den neuen Stand.",
+      "details": "Das Skript synchronisiert den RoboWait-Code mit GitHub, führt die für Laravel nötigen Schritte aus und erkennt, ob RoboWait im Docker-Betrieb läuft. Im Docker-Betrieb werden Image und Container aktualisiert; im alten Host-Betrieb würden systemd-Dienste neu gestartet. RoboWait besteht aus Web, Reverb und Scheduler, darum betrifft ein Update mehr als nur einen einzelnen Prozess.",
+      "whenToUse": "Wenn ein neuer RoboWait-Stand aus GitHub produktiv auf artserver übernommen werden soll.",
+      "beforeStart": [
+        "Prüfen, ob gerade niemand aktiv mit RoboWait arbeitet.",
+        "Bei grösseren Änderungen vorher RoboWait Backup starten.",
+        "Sicherstellen, dass GitHub-Credentials auf artserver funktionieren."
+      ],
+      "effect": [
+        "Code wird aus GitHub aktualisiert.",
+        "Laravel-Abhängigkeiten, Migrationen und Caches werden verarbeitet.",
+        "Docker-Container oder Dienste werden neu gestartet.",
+        "Web, Reverb und Scheduler können kurz nicht erreichbar sein."
+      ],
+      "successCriteria": [
+        "Update endet mit Exitcode 0.",
+        "RoboWait-Weboberfläche ist erreichbar.",
+        "Reverb-Port ist erreichbar.",
+        "Scheduler-Container oder Scheduler-Dienst läuft."
+      ],
+      "rollback": "Bei Fehlern zuerst Job-Log und Docker-Logs prüfen. Falls der neue Stand fehlerhaft ist, auf den vorherigen Git-Commit zurücksetzen, Container neu bauen und Smoke-Test ausführen.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/robowait",
+        "command": "sudo bash scripts/update-artserver.sh",
+        "sudo": true
+      }
+    },
+    {
+      "id": "robowait.backup",
+      "group": "RoboWait",
+      "label": "RoboWait Backup",
+      "source": "/opt/apps/robowait/scripts/backup.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Erstellt ein RoboWait-Backup.",
+      "summary": "Erstellt ein Backup der wichtigen RoboWait-Daten.",
+      "details": "Das Backup umfasst die produktiven Daten, die für eine Wiederherstellung von RoboWait relevant sind, insbesondere Datenbank, Uploads, Exporte und anwendungsspezifische Dateien. Es ist der empfohlene Sicherheitsanker vor Updates und Restore-Tests.",
+      "whenToUse": "Vor RoboWait-Updates, vor Migrationen, vor Restore-Tests oder als manuelles Zusatzbackup.",
+      "effect": [
+        "RoboWait-Daten werden gelesen und als Backup abgelegt.",
+        "Die laufende Anwendung wird nicht absichtlich verändert."
+      ],
+      "successCriteria": [
+        "Backup-Skript endet erfolgreich.",
+        "Log nennt ein neu erstelltes Backup.",
+        "RoboWait bleibt erreichbar."
+      ],
+      "rollback": "Kein Rollback nötig. Wenn das Backup fehlschlägt, vor riskanten Arbeiten zuerst die Ursache beheben.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/robowait",
+        "command": "bash scripts/backup.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "robowait.smoke.docker",
+      "group": "RoboWait",
+      "label": "RoboWait Docker-Smoke-Test",
+      "source": "/opt/apps/robowait/scripts/smoke-docker.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Prüft Web und Reverb des laufenden RoboWait-Containers.",
+      "summary": "Prüft die laufenden RoboWait-Docker-Dienste.",
+      "details": "Der Smoke-Test prüft die Weboberfläche auf 127.0.0.1:18002 und den Reverb-Port auf 127.0.0.1:18003. Damit werden die beiden sichtbaren Teile von RoboWait geprüft; der Scheduler wird ergänzend über Docker-Status sichtbar.",
+      "whenToUse": "Nach RoboWait-Update, Container-Neustart, Caddy-Änderung oder wenn Login, Dashboard oder Live-Funktionen auffällig sind.",
+      "effect": [
+        "Es werden nur Prüfungen ausgeführt.",
+        "Keine Daten werden verändert.",
+        "Keine Container werden neu gestartet."
+      ],
+      "successCriteria": [
+        "Web antwortet erfolgreich.",
+        "Reverb-Port ist erreichbar.",
+        "Smoke-Test endet mit Exitcode 0."
+      ],
+      "rollback": "Kein Rollback nötig, weil der Test nichts verändert.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/robowait",
+        "command": "bash scripts/smoke-docker.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "robowait.restore",
+      "group": "RoboWait",
+      "label": "RoboWait Restore",
+      "source": "/opt/apps/robowait/scripts/restore.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "RESTORE",
+      "notes": "Kann produktive RoboWait-Daten zurückspielen.",
+      "summary": "Stellt RoboWait-Daten aus einem Backup wieder her.",
+      "details": "Ein Restore ist eine riskante Aktion, weil produktive Daten ersetzt werden können. Dieser Menüpunkt ist nur für echte Wiederherstellungen gedacht. Vorher muss klar sein, welches Backup verwendet wird und welcher aktuelle Stand dadurch verloren gehen kann.",
+      "whenToUse": "Bei Datenverlust, beschädigter Datenbank oder wenn ein bekannter früherer Stand bewusst wiederhergestellt werden soll.",
+      "beforeStart": [
+        "Aktuellen Stand sichern, falls noch möglich.",
+        "Backup-Datei eindeutig auswählen.",
+        "Ausfallfenster einplanen."
+      ],
+      "effect": [
+        "Produktive RoboWait-Daten können ersetzt werden.",
+        "Dienste oder Container müssen danach geprüft werden."
+      ],
+      "successCriteria": [
+        "Restore endet erfolgreich.",
+        "RoboWait-Web ist erreichbar.",
+        "Login und Dashboard funktionieren.",
+        "Smoke-Test ist erfolgreich."
+      ],
+      "rollback": "Wenn der falsche Stand wiederhergestellt wurde, muss ein anderes Backup eingespielt werden. Darum den aktuellen Zustand vor dem Restore sichern.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/robowait",
+        "command": "bash scripts/restore.sh",
+        "sudo": false
+      }
+    },
+    {
+      "id": "robowait.local.dev.start",
+      "group": "RoboWait",
+      "label": "RoboWait lokale Entwicklung starten",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\start-dev.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Startet die lokale RoboWait-Entwicklungsumgebung.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\start-dev.ps1",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.git.sync",
+      "group": "RoboWait",
+      "label": "RoboWait lokaler Git-Sync",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\git-sync.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "GITSYNC",
+      "notes": "Führt den lokalen RoboWait-Git-Sync aus.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\git-sync.ps1",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.install.git.hooks",
+      "group": "RoboWait",
+      "label": "RoboWait Git-Hooks installieren",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\install-git-hooks.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Installiert lokale Git-Hooks im RoboWait-Repository.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\install-git-hooks.ps1",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.render.docs",
+      "group": "RoboWait",
+      "label": "RoboWait Dokument-Screenshots rendern",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\render-doc-screenshots.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Rendert Screenshots für RoboWait-Dokumentation.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\render-doc-screenshots.ps1",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.render.svg.to.png",
+      "group": "RoboWait",
+      "label": "RoboWait SVG nach PNG rendern",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\render-svg-to-png.cjs",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Node-Hilfsskript mit Parametern. Vor dem Start Argumente ergänzen.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "node",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": [
+          "scripts\\render-svg-to-png.cjs"
+        ]
+      }
+    },
+    {
+      "id": "robowait.local.export.markdown.docx",
+      "group": "RoboWait",
+      "label": "RoboWait Markdown nach DOCX exportieren",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\export-markdown-docx.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Erzeugt DOCX-Dokumente aus Markdown.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\export-markdown-docx.ps1",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.postprocess.docx",
+      "group": "RoboWait",
+      "label": "RoboWait DOCX nachbearbeiten",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\postprocess-docx.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Hilfsskript mit Parametern. Vor dem Start Argumente ergänzen.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\postprocess-docx.ps1",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.statistics.validator",
+      "group": "RoboWait",
+      "label": "RoboWait Statistik-Validator",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\statistics-validator.py",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Python-Prüfskript. Vor dem Start Eingabedateien und Python-Umgebung prüfen.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "python",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": [
+          "scripts\\statistics-validator.py"
+        ]
+      }
+    },
+    {
+      "id": "robowait.local.export.screenshot.todo",
+      "group": "RoboWait",
+      "label": "RoboWait Screenshot-Todo exportieren",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\export-screenshot-todo.py",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Python-Hilfsskript mit möglichem Parameterbedarf.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "python",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": [
+          "scripts\\export-screenshot-todo.py"
+        ]
+      }
+    },
+    {
+      "id": "robowait.local.flash.esp32",
+      "group": "RoboWait",
+      "label": "RoboWait ESP32 flashen",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\flash-esp32.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "ESP32",
+      "notes": "Flasht angeschlossene ESP32-Hardware. Nur starten, wenn das richtige Gerät angeschlossen ist.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\flash-esp32.ps1",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.build.android.vision.host",
+      "group": "RoboWait",
+      "label": "RoboWait Android Vision Host bauen",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\build-android-vision-host.cmd",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "ANDROID",
+      "notes": "Baut den Android Vision Host lokal.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\build-android-vision-host.cmd",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.local.install.android.vision.host",
+      "group": "RoboWait",
+      "label": "RoboWait Android Vision Host installieren",
+      "source": "{ProjectsRoot}\\RoboWait\\scripts\\install-android-vision-host.cmd",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "ANDROIDINSTALL",
+      "notes": "Installiert auf ein angeschlossenes Android-Gerät. Gerät vorher prüfen.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "{ProjectsRoot}\\RoboWait\\scripts\\install-android-vision-host.cmd",
+        "cwd": "{ProjectsRoot}\\RoboWait",
+        "args": []
+      }
+    },
+    {
+      "id": "robowait.participant.export.fallback",
+      "group": "RoboWait",
+      "label": "RoboWait Teilnehmerdaten Fallback-Export",
+      "source": "/opt/apps/robowait/scripts/participant-data-export-fallback.php",
+      "location": "artserver",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "EXPORT",
+      "notes": "PHP-Fallback-Skript. Vor dem Start Parameter und Datenschutz prüfen.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/robowait",
+        "command": "php scripts/participant-data-export-fallback.php",
+        "sudo": false
+      }
+    },
+    {
+      "id": "arzttarif.update.github",
+      "group": "Arzttarif",
+      "label": "Arzttarif Docker-Update aus GitHub",
+      "source": "/home/art/arkons/deploy/artserver/docker/update-arzttarif-github.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "ARZTTARIFGITHUB",
+      "notes": "Aktualisiert den produktiven Arzttarif-Assistenten aus GitHub.",
+      "summary": "Aktualisiert den produktiven Arzttarif-Assistenten auf artserver aus GitHub.",
+      "details": "Das Skript klont den neuesten GitHub-Stand in ein temporäres Verzeichnis und synchronisiert ihn kontrolliert nach /opt/apps/Arzttarif. Dieser Weg ist nötig, weil /opt/apps/Arzttarif aktuell kein normaler Git-Checkout ist. Laufzeitdaten, Logs, Env-Dateien und Docker-Cache bleiben erhalten. Wenn requirements.txt geändert wurde, wird das Docker-Image neu gebaut. Danach wird der Container neu gestartet und der Smoke-Test ausgeführt.",
+      "whenToUse": "Wenn ein neuer Arzttarif-Stand aus GitHub produktiv auf artserver übernommen werden soll.",
+      "beforeStart": [
+        "Prüfen, ob GitHub-Credentials auf artserver vorhanden sind.",
+        "Bei grösseren Änderungen überlegen, ob vorher ein separates Backup nötig ist.",
+        "Kurzes Ausfallfenster für den Container-Neustart akzeptieren."
+      ],
+      "effect": [
+        "Code unter /opt/apps/Arzttarif wird aktualisiert.",
+        "Logs, Env und Docker-Cache bleiben erhalten.",
+        "Bei geänderten Python-Abhängigkeiten wird das Image neu gebaut.",
+        "Der Arzttarif-Container wird neu gestartet."
+      ],
+      "successCriteria": [
+        "Smoke-Test endet erfolgreich.",
+        "/api/version antwortet.",
+        "Caddy-Route auf den Docker-Port bleibt intakt."
+      ],
+      "rollback": "Bei Fehlern Job-Log, Docker-Logs und Caddy-Route prüfen. Für einen Code-Rollback kann ein älterer GitHub-Stand erneut synchronisiert oder ein vorhandenes Backup verwendet werden.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/home/art/arkons/deploy/artserver/docker",
+        "command": "sudo bash update-arzttarif-github.sh",
+        "sudo": true
+      }
+    },
+    {
+      "id": "arzttarif.deploy.local",
+      "group": "Arzttarif",
+      "label": "Arzttarif Docker-Deploy vom Entwicklungsordner",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\Deploy-Docker-To-Artserver.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "ARZTTARIF",
+      "notes": "Kopiert den lokalen Entwicklungsstand nach artserver.",
+      "run": {
+        "type": "AdminFunction",
+        "function": "Run-ArzttarifDockerDeploy"
+      }
+    },
+    {
+      "id": "arzttarif.merge.to.main",
+      "group": "Arzttarif",
+      "label": "Arzttarif Branch nach main mergen",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\git-merge-to-main.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "GITMERGE",
+      "notes": "Git-Operation. Vorher Arbeitsstand prüfen.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\git-merge-to-main.ps1",
+        "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
+        "args": []
+      }
+    },
+    {
+      "id": "arzttarif.cleanup.branches",
+      "group": "Arzttarif",
+      "label": "Arzttarif Branches aufräumen",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\cleanup-branches-main.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "BRANCHCLEANUP",
+      "notes": "Git-Aufräumaktion. Vorher prüfen, ob keine Branches mehr gebraucht werden.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\cleanup-branches-main.ps1",
+        "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
+        "args": []
+      }
+    },
+    {
+      "id": "arzttarif.copy.dev.to.operativ",
+      "group": "Arzttarif",
+      "label": "Arzttarif Dev nach operative Version kopieren",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\Dev nach operative Version kopieren.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "ARZTTARIFCOPY",
+      "notes": "Kopiert Entwicklungsdateien in eine operative Version. Nur starten, wenn Ziel und Inhalt klar sind.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\Dev nach operative Version kopieren.ps1",
+        "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
+        "args": []
+      }
+    },
+    {
+      "id": "arzttarif.normalize.encoding",
+      "group": "Arzttarif",
+      "label": "Arzttarif Encoding normalisieren",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\normalize_encoding.py",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "ENCODING",
+      "notes": "Python-Hilfsskript. Parameter und Zielordner zuerst prüfen.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "python",
+        "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
+        "args": [
+          "scripts\\normalize_encoding.py"
+        ]
+      }
+    },
+    {
+      "id": "arzttarif.prune.synonyms",
+      "group": "Arzttarif",
+      "label": "Arzttarif Synonyme bereinigen",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\prune_synonyms.py",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "SYNONYMS",
+      "notes": "Python-Hilfsskript. Parameter und Datenziel zuerst prüfen.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "python",
+        "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
+        "args": [
+          "scripts\\prune_synonyms.py"
+        ]
+      }
+    },
+    {
+      "id": "arzttarif.clean.json",
+      "group": "Arzttarif",
+      "label": "Arzttarif JSON bereinigen",
+      "source": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\clean_json.py",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "JSON",
+      "notes": "Python-Hilfsskript. Parameter zuerst prüfen.",
+      "run": {
+        "type": "LocalCommand",
+        "path": "python",
+        "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
+        "args": [
+          "scripts\\clean_json.py"
+        ]
+      }
+    }
+  ]
+}

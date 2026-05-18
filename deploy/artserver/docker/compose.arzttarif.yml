@@ -1,0 +1,55 @@
+name: arkons-arzttarif
+
+services:
+  arzttarif:
+    build:
+      context: ./arzttarif
+      dockerfile: Dockerfile
+      args:
+        APP_UID: "${ARZTTARIF_CONTAINER_UID:-1000}"
+        APP_GID: "${ARZTTARIF_CONTAINER_GID:-1000}"
+    image: arkons/arzttarif:prototype
+    container_name: Arzttarif
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ARZTTARIF_DOCKER_PORT:-18000}:8000"
+    env_file:
+      - /etc/arzttarif/arzttarif.env
+    environment:
+      HOME: /home/app
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: "1"
+      HF_HOME: /home/app/.cache/huggingface
+      TRANSFORMERS_CACHE: /home/app/.cache/huggingface
+      TORCH_HOME: /home/app/.cache/torch
+    working_dir: /app
+    command:
+      - gunicorn
+      - server:app
+      - --bind
+      - 0.0.0.0:8000
+      - --workers
+      - "1"
+      - --timeout
+      - "180"
+      - --access-logfile
+      - "-"
+      - --error-logfile
+      - "-"
+    volumes:
+      - /opt/apps/Arzttarif:/app:ro
+      - /opt/apps/Arzttarif/logs:/app/logs
+      - /opt/apps/Arzttarif/.docker-cache/huggingface:/home/app/.cache/huggingface
+      - /opt/apps/Arzttarif/.docker-cache/torch:/home/app/.cache/torch
+    tmpfs:
+      - /tmp:size=512m
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/version', timeout=10).read()"
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 90s

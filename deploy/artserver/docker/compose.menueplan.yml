@@ -1,0 +1,38 @@
+name: arkons-menueplan
+
+services:
+  menueplan:
+    build:
+      context: ./menueplan
+      dockerfile: Dockerfile
+      args:
+        APP_UID: "${MENUEPLAN_CONTAINER_UID:-33}"
+        APP_GID: "${MENUEPLAN_CONTAINER_GID:-33}"
+    image: arkons/menueplan:prototype
+    container_name: Menueplan
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MENUEPLAN_DOCKER_PORT:-18001}:8080"
+    environment:
+      APP_ROOT: /app
+      APP_DATA_DIR: /app/data
+      APP_RUNTIME_USER: www-data
+      APP_RUNTIME_GROUP: www-data
+      APP_FPM_SOCKET: ""
+      PHP_FPM_SERVICE: ""
+    working_dir: /app
+    volumes:
+      - /opt/apps/Menueplan:/app:ro
+      - /opt/apps/Menueplan/data:/app/data
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    healthcheck:
+      test:
+        - CMD
+        - php
+        - -r
+        - "exit(@file_get_contents('http://127.0.0.1:8080/api.php?type=status') === false ? 1 : 0);"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s

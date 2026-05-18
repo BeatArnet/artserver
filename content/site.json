@@ -10,7 +10,9 @@
       "children": [
         { "label": "Arzttarif-Assistent", "url": "/arzttarif-assistent/" },
         { "label": "Simulation: von Tarmed zu TARDOC/Pauschalen", "url": "/Tarifvergleich/" },
-        { "label": "Spiel und Quiz Neuer Arzttarif", "url": "/Quiz_NeuerArzttarif/" }
+        { "label": "Spiel und Quiz Neuer Arzttarif", "url": "/Quiz_NeuerArzttarif/" },
+        { "label": "RoboWait", "url": "/robowait/" },
+        { "label": "Menüplaner", "url": "/menueplaner/" }
       ]
     },
     { "label": "ÜBER UNS", "url": "/uber-uns/" },
