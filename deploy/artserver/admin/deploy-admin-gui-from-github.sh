@@ -13,12 +13,15 @@ LOG_DIR="${ARKONS_ADMIN_WEB_LOG_DIR:-/home/art/arkons/logs/admin/jobs}"
 CADDY_SITE="${ARKONS_ADMIN_CADDY_SITE:-/etc/caddy/sites-enabled/arkons-admin-lan.caddy}"
 SUDO="${ARKONS_ADMIN_SUDO:-sudo}"
 GITHUB_CREDENTIAL_FILE="${ARKONS_ADMIN_GITHUB_CREDENTIAL_FILE:-/home/art/.config/arkons/github.env}"
+PRIVILEGED_HELPER="${ARKONS_ADMIN_PRIVILEGED_HELPER:-/usr/local/sbin/arkons-admin-web-apply}"
+SUDOERS_FILE="${ARKONS_ADMIN_SUDOERS_FILE:-/etc/sudoers.d/arkons-admin-web}"
 GIT_ASKPASS_FILE=""
 GIT_AUTH_USER_EFFECTIVE=""
 GIT_AUTH_TOKEN_EFFECTIVE=""
 TMP_CLONE=""
 SKIP_CADDY=0
 FORCE=0
+INSTALL_SUDO_HELPER=0
 
 cleanup() {
   if [[ -n "${GIT_ASKPASS_FILE}" && -f "${GIT_ASKPASS_FILE}" ]]; then
@@ -35,13 +38,17 @@ usage() {
 Arkons Admin Web-GUI aus GitHub deployen
 
 Verwendung:
-  deploy-admin-gui-from-github.sh [--branch main] [--skip-caddy] [--force]
+  deploy-admin-gui-from-github.sh [--branch main] [--skip-caddy] [--force] [--install-sudo-helper]
 
 Standard:
   - holt den aktuellen artserver-Stand aus GitHub
   - richtet arkons-admin-web.service ein
   - aktiviert Autostart bei jedem Serverneustart
   - richtet eine LAN/VPN-Caddy-Route ein: http://192.168.1.136:18110/
+
+Hinweis:
+  Der Web-Start kann kein sudo-Passwort eingeben. Einmalig im Terminal mit
+  --install-sudo-helper starten, damit ein eng begrenzter root-Helfer installiert wird.
 
 Umgebung:
   ARKONS_ADMIN_REPO_URL       Git-Repository
@@ -67,6 +74,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --force)
       FORCE=1
+      ;;
+    --install-sudo-helper)
+      INSTALL_SUDO_HELPER=1
       ;;
     -h|--help|help)
       usage
@@ -185,6 +195,183 @@ git_with_optional_auth() {
   fi
 }
 
+write_privileged_helper_payload() {
+  cat <<'HELPER'
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="/home/art/arkons/deploy/artserver"
+SERVICE_NAME="arkons-admin-web"
+SERVICE_PORT="18010"
+SERVICE_HOST="127.0.0.1"
+LAN_IP="192.168.1.136"
+LAN_PORT="18110"
+LOG_DIR="/home/art/arkons/logs/admin/jobs"
+CADDY_SITE="/etc/caddy/sites-enabled/arkons-admin-lan.caddy"
+SKIP_CADDY=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --skip-caddy)
+      SKIP_CADDY=1
+      ;;
+    -h|--help|help)
+      echo "Verwendung: arkons-admin-web-apply [--skip-caddy]"
+      exit 0
+      ;;
+    *)
+      echo "Unbekanntes Argument: $1" >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+
+log() {
+  printf '== %s ==\n' "$*"
+}
+
+need_cmd() {
+  command -v "$1" >/dev/null 2>&1 || { echo "Befehl fehlt: $1" >&2; exit 3; }
+}
+
+need_cmd python3
+need_cmd systemctl
+need_cmd curl
+need_cmd ss
+need_cmd fuser
+
+log "Log-Ordner vorbereiten"
+install -d -m 0755 -o art -g art "$LOG_DIR"
+
+log "systemd-Service installieren"
+service_file="$(mktemp)"
+caddy_tmp=""
+cleanup() {
+  rm -f "$service_file"
+  if [[ -n "${caddy_tmp}" ]]; then
+    rm -f "$caddy_tmp"
+  fi
+}
+trap cleanup EXIT
+
+cat > "$service_file" <<UNIT
+[Unit]
+Description=Arkons Admin Web-GUI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=art
+Group=art
+WorkingDirectory=$APP_ROOT
+Environment=PYTHONUNBUFFERED=1
+Environment=ARKONS_ADMIN_WEB_LOG_DIR=$LOG_DIR
+ExecStart=$(command -v python3) $APP_ROOT/admin-gui/app.py --host $SERVICE_HOST --port $SERVICE_PORT --job-log-dir $LOG_DIR
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+install -m 0644 "$service_file" "/etc/systemd/system/${SERVICE_NAME}.service"
+systemctl stop "$SERVICE_NAME" >/dev/null 2>&1 || true
+if ss -ltn "sport = :${SERVICE_PORT}" | grep -q ":${SERVICE_PORT}"; then
+  echo "Port ${SERVICE_PORT} ist noch belegt; alter Admin-Web-Prozess wird beendet."
+  fuser -k "${SERVICE_PORT}/tcp" >/dev/null 2>&1 || true
+  sleep 1
+fi
+systemctl daemon-reload
+systemctl enable "$SERVICE_NAME"
+systemctl restart "$SERVICE_NAME"
+systemctl is-active --quiet "$SERVICE_NAME"
+
+log "Interner HTTP-Test"
+curl -fsS "http://${SERVICE_HOST}:${SERVICE_PORT}/" >/dev/null
+
+if [[ "$SKIP_CADDY" != "1" ]]; then
+  log "Interne LAN/VPN-Caddy-Route installieren"
+  need_cmd caddy
+  install -d -m 0755 "$(dirname "$CADDY_SITE")" /etc/caddy/backups
+  if [[ -f "$CADDY_SITE" ]]; then
+    cp -a "$CADDY_SITE" "/etc/caddy/backups/$(basename "$CADDY_SITE").$(date +%Y%m%d-%H%M%S)"
+  fi
+
+  caddy_tmp="$(mktemp)"
+  cat > "$caddy_tmp" <<CADDY
+# arkons-managed: Admin-GUI nur im LAN/VPN.
+# Kein oeffentlicher Domain-Name, kein offener Internet-Zugang.
+
+http://${LAN_IP}:${LAN_PORT} {
+	bind ${LAN_IP}
+	encode zstd gzip
+	reverse_proxy ${SERVICE_HOST}:${SERVICE_PORT}
+}
+CADDY
+
+  install -m 0644 "$caddy_tmp" "$CADDY_SITE"
+
+  if ! grep -Eq 'sites-enabled/.+\.caddy|sites-enabled/\*\.caddy' /etc/caddy/Caddyfile; then
+    echo "Warnung: /etc/caddy/Caddyfile scheint /etc/caddy/sites-enabled/*.caddy nicht zu importieren." >&2
+    echo "Die Datei wurde geschrieben, Caddy koennte sie aber ignorieren: $CADDY_SITE" >&2
+  fi
+
+  caddy validate --config /etc/caddy/Caddyfile
+  systemctl reload caddy
+  systemctl is-active --quiet caddy
+fi
+
+log "Status"
+systemctl --no-pager --full status "$SERVICE_NAME" | sed -n '1,18p'
+echo ""
+echo "Intern auf artserver: http://${SERVICE_HOST}:${SERVICE_PORT}/"
+if [[ "$SKIP_CADDY" != "1" ]]; then
+  echo "LAN/VPN: http://${LAN_IP}:${LAN_PORT}/"
+fi
+HELPER
+}
+
+install_sudo_helper() {
+  log "sudo-Helfer installieren"
+  helper_tmp="$(mktemp)"
+  sudoers_tmp="$(mktemp)"
+  write_privileged_helper_payload > "$helper_tmp"
+  cat > "$sudoers_tmp" <<EOF
+# arkons-managed: erlaubt art nur den festen Admin-Web-Helfer ohne Passwort.
+art ALL=(root) NOPASSWD: ${PRIVILEGED_HELPER}
+EOF
+
+  ${SUDO} install -m 0755 -o root -g root "$helper_tmp" "$PRIVILEGED_HELPER"
+  ${SUDO} visudo -cf "$sudoers_tmp" >/dev/null
+  ${SUDO} install -m 0440 -o root -g root "$sudoers_tmp" "$SUDOERS_FILE"
+  ${SUDO} visudo -cf "$SUDOERS_FILE" >/dev/null
+  rm -f "$helper_tmp" "$sudoers_tmp"
+  echo "sudo-Helfer installiert: $PRIVILEGED_HELPER"
+  echo "sudo-Regel installiert: $SUDOERS_FILE"
+}
+
+run_privileged_apply() {
+  if [[ ! -x "$PRIVILEGED_HELPER" ]]; then
+    echo "Der sudo-Helfer fehlt noch: $PRIVILEGED_HELPER" >&2
+    echo "Einmalig im PowerShell-Terminal ausführen:" >&2
+    echo "  .\\publish-admin-gui.cmd -CommitMessage \"Admin-GUI sudo-Helfer installieren\" -InstallSudoHelper" >&2
+    exit 5
+  fi
+
+  if ! ${SUDO} "$PRIVILEGED_HELPER" "$@"; then
+    echo "" >&2
+    echo "Privilegierter Admin-Web-Schritt fehlgeschlagen." >&2
+    if [[ "$SUDO" == *"-n"* ]]; then
+      echo "Der Web-Start kann kein sudo-Passwort eingeben." >&2
+      echo "Einmalig im PowerShell-Terminal ausführen:" >&2
+      echo "  .\\publish-admin-gui.cmd -CommitMessage \"Admin-GUI sudo-Helfer installieren\" -InstallSudoHelper" >&2
+    fi
+    exit 6
+  fi
+}
+
 need_cmd git
 need_cmd python3
 need_cmd "${SUDO%% *}"
@@ -192,6 +379,11 @@ need_cmd curl
 
 safe_git_name "$BRANCH" || { echo "Unsicherer Branch-Name: $BRANCH" >&2; exit 2; }
 setup_git_auth
+
+if [[ "$INSTALL_SUDO_HELPER" == "1" && "$SUDO" == *"-n"* ]]; then
+  echo "--install-sudo-helper braucht ein Terminal, weil dabei einmalig sudo nach dem Passwort fragen muss." >&2
+  exit 2
+fi
 
 log "Git-Checkout aktualisieren"
 if [[ -d "$APP_ROOT/.git" ]]; then
@@ -234,76 +426,13 @@ python3 -m py_compile admin-gui/app.py
 log "Log-Ordner vorbereiten"
 mkdir -p "$LOG_DIR"
 
-log "systemd-Service installieren"
-service_file="$(mktemp)"
-cat > "$service_file" <<UNIT
-[Unit]
-Description=Arkons Admin Web-GUI
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=art
-Group=art
-WorkingDirectory=$APP_ROOT
-Environment=PYTHONUNBUFFERED=1
-Environment=ARKONS_ADMIN_WEB_LOG_DIR=$LOG_DIR
-ExecStart=$(command -v python3) $APP_ROOT/admin-gui/app.py --host $SERVICE_HOST --port $SERVICE_PORT --job-log-dir $LOG_DIR
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-UNIT
-
-${SUDO} install -m 0644 "$service_file" "/etc/systemd/system/${SERVICE_NAME}.service"
-rm -f "$service_file"
-${SUDO} systemctl daemon-reload
-${SUDO} systemctl enable "$SERVICE_NAME"
-${SUDO} systemctl restart "$SERVICE_NAME"
-${SUDO} systemctl is-active --quiet "$SERVICE_NAME"
-
-log "Interner HTTP-Test"
-curl -fsS "http://${SERVICE_HOST}:${SERVICE_PORT}/" >/dev/null
-
-if [[ "$SKIP_CADDY" != "1" ]]; then
-  log "Interne LAN/VPN-Caddy-Route installieren"
-  need_cmd caddy
-  ${SUDO} install -d -m 0755 "$(dirname "$CADDY_SITE")" /etc/caddy/backups
-  if [[ -f "$CADDY_SITE" ]]; then
-    ${SUDO} cp -a "$CADDY_SITE" "/etc/caddy/backups/$(basename "$CADDY_SITE").$(date +%Y%m%d-%H%M%S)"
-  fi
-
-  caddy_tmp="$(mktemp)"
-  cat > "$caddy_tmp" <<CADDY
-# arkons-managed: Admin-GUI nur im LAN/VPN.
-# Kein oeffentlicher Domain-Name, kein offener Internet-Zugang.
-
-http://${LAN_IP}:${LAN_PORT} {
-	bind ${LAN_IP}
-	encode zstd gzip
-	reverse_proxy ${SERVICE_HOST}:${SERVICE_PORT}
-}
-CADDY
-
-  ${SUDO} install -m 0644 "$caddy_tmp" "$CADDY_SITE"
-  rm -f "$caddy_tmp"
-
-  if ! ${SUDO} grep -Eq 'sites-enabled/.+\\.caddy|sites-enabled/\\*\\.caddy' /etc/caddy/Caddyfile; then
-    echo "Warnung: /etc/caddy/Caddyfile scheint /etc/caddy/sites-enabled/*.caddy nicht zu importieren." >&2
-    echo "Die Datei wurde geschrieben, Caddy koennte sie aber ignorieren: $CADDY_SITE" >&2
-  fi
-
-  ${SUDO} caddy validate --config /etc/caddy/Caddyfile
-  ${SUDO} systemctl reload caddy
-  ${SUDO} systemctl is-active --quiet caddy
+if [[ "$INSTALL_SUDO_HELPER" == "1" ]]; then
+  install_sudo_helper
 fi
 
-log "Status"
-systemctl --no-pager --full status "$SERVICE_NAME" | sed -n '1,18p'
-echo ""
-echo "Intern auf artserver: http://${SERVICE_HOST}:${SERVICE_PORT}/"
-if [[ "$SKIP_CADDY" != "1" ]]; then
-  echo "LAN/VPN: http://${LAN_IP}:${LAN_PORT}/"
+privileged_args=()
+if [[ "$SKIP_CADDY" == "1" ]]; then
+  privileged_args+=(--skip-caddy)
 fi
+
+run_privileged_apply "${privileged_args[@]}"

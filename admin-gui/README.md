@@ -37,13 +37,19 @@ Vom Entwicklungsrechner:
 .\publish-admin-gui.cmd -CommitMessage "Admin-GUI aktualisieren"
 ```
 
+Einmalig, damit der Web-Start ohne sudo-Passwort funktionieren kann:
+
+```powershell
+.\publish-admin-gui.cmd -CommitMessage "Admin-GUI sudo-Helfer installieren" -InstallSudoHelper
+```
+
 Aus der lokalen Weboberfläche:
 
 ```text
 artserver -> Admin-GUI nach GitHub pushen und auf artserver installieren
 ```
 
-Der Web-Start nutzt den Schutzbegriff `ADMINGUI`. Falls artserver für systemd oder Caddy ein sudo-Passwort braucht, bricht der Web-Job nicht-interaktiv ab. Dann das gleiche Skript im Terminal starten, damit das sudo-Passwort eingegeben werden kann.
+Der Web-Start nutzt den Schutzbegriff `ADMINGUI`. Er fragt bewusst kein sudo-Passwort ab. Stattdessen wird auf artserver einmalig ein root-eigener Helfer eingerichtet, der nur den Dienst `arkons-admin-web` und die interne Caddy-Route aktualisieren darf.
 
 ## Aktueller Funktionsumfang
 
@@ -57,12 +63,12 @@ Der Web-Start nutzt den Schutzbegriff `ADMINGUI`. Falls artserver für systemd o
 - Runner-Befehl sichtbar
 - Start und Dry-run für freigegebene artserver-Skripte
 - Schutzwort-Eingabe bei riskanteren Aktionen
+- Publish-Deploy per GitHub mit einmaligem sudo-Helfer für den Browser-Start
 
 Noch nicht enthalten:
 
 - Login
 - echte Statuschecks
 - dauerhafte Jobliste im Browser
-- automatische Rechteprüfung für sudo-Kommandos
 
 Diese Reihenfolge ist Absicht. Zuerst werden Anzeige, Katalog und Runner stabil, danach folgen Login, dauerhafte Logs und der Betrieb als eigener Container.

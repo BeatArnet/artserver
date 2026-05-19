@@ -7,6 +7,7 @@ param(
   [switch]$SkipPush,
   [switch]$SkipDeploy,
   [switch]$SkipCaddy,
+  [switch]$InstallSudoHelper,
   [switch]$NonInteractiveSudo,
   [switch]$DryRun
 )
@@ -108,6 +109,9 @@ if (-not $SkipDeploy) {
   $remoteArgs = @("--branch", $Branch)
   if ($SkipCaddy) {
     $remoteArgs += "--skip-caddy"
+  }
+  if ($InstallSudoHelper) {
+    $remoteArgs += "--install-sudo-helper"
   }
 
   $quotedRemoteArgs = (($remoteArgs | ForEach-Object { "'" + ($_ -replace "'", "'\''") + "'" }) -join " ")

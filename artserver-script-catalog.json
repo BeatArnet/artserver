@@ -30,12 +30,13 @@
       "risk": "hoch",
       "requiresConfirmation": "ADMINGUI",
       "summary": "Pusht die lokale Administrationsoberfläche nach GitHub und aktualisiert danach den Dienst auf artserver.",
-      "details": "Dieser Schritt ist der komplette Veröffentlichungsweg für die Admin-Weboberfläche: lokale Prüfungen, Commit mit Standardnachricht, Push nach GitHub, danach SSH auf artserver und Installation beziehungsweise Neustart des systemd-Dienstes. Die Weboberfläche bleibt nur intern über LAN/VPN vorgesehen.",
+      "details": "Dieser Schritt ist der komplette Veröffentlichungsweg für die Admin-Weboberfläche: lokale Prüfungen, Commit mit eingegebener Nachricht, Push nach GitHub, danach SSH auf artserver und Installation beziehungsweise Neustart des systemd-Dienstes. Die Weboberfläche bleibt nur intern über LAN/VPN vorgesehen. Für den Start aus dem Browser muss der sudo-Helfer auf artserver einmalig per Terminal installiert sein.",
       "whenToUse": "Wenn Änderungen an der Admin-GUI fertig sind und auf artserver laufen sollen.",
       "beforeStart": [
         "Prüfen, ob die lokalen Änderungen wirklich veröffentlicht werden sollen.",
         "Die Weboberfläche lokal kurz öffnen und grobe Fehler ausschliessen.",
-        "GitHub- und SSH-Zugang zu artserver müssen funktionieren."
+        "GitHub- und SSH-Zugang zu artserver müssen funktionieren.",
+        "Für Web-Starts muss der sudo-Helfer einmalig per Terminal installiert sein: .\\publish-admin-gui.cmd -CommitMessage \"Admin-GUI sudo-Helfer installieren\" -InstallSudoHelper"
       ],
       "effect": [
         "Lokale Änderungen an Admin-GUI, Katalog und Deploy-Skripten werden committet.",
