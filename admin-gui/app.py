@@ -357,6 +357,7 @@ class Renderer:
         apps, _, _ = self.data.load()
         nav = self.nav(apps, active, active_script_id)
         notice_html = f'<div class="notice">{notice}</div>' if notice else ""
+        runtime_class = "runtime-artserver" if is_artserver_runtime() else "runtime-local"
         area_ids = {str(area.get("id", "")) for area in apps.get("areas", [])}
         h1_attrs = ""
         if active_script_id:
@@ -372,7 +373,7 @@ class Renderer:
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/editor.js" defer></script>
 </head>
-<body>
+<body class="{runtime_class}">
   <div class="shell">
     <aside class="sidebar">
       <div class="brand">

@@ -67,6 +67,22 @@
   --dur: 180ms;
 }
 
+body.runtime-artserver {
+  --bg: #0b0304;
+  --bg-alt: #120607;
+  --surface: #18090b;
+  --surface-soft: #200d10;
+  --surface-hover: #2a1115;
+  --surface-strong: #35171c;
+  --glass: rgba(26, 7, 10, 0.78);
+
+  --line: rgba(255, 210, 210, 0.08);
+  --line-strong: rgba(255, 210, 210, 0.15);
+
+  --grad-sidebar: linear-gradient(180deg, #150607 0%, #090203 100%);
+  --grad-card: linear-gradient(145deg, #1f0d10 0%, #160709 100%);
+}
+
 /* ── Reset ─────────────────────────────────────────────────── */
 *,
 *::before,
