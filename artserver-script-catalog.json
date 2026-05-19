@@ -18,7 +18,9 @@
         "args": []
       },
       "summary": "Zentrale Startseite für Website arkons.ch, Caddy, Docker, Backups, Checks und die Projekt-Admin-Einstiege.",
-      "details": "Kommandozeilenbasiertes Bash-Skript mit gegen 40 unterschiedlichen Skripts zur Verwaltung."
+      "details": "Kommandozeilenbasiertes Bash-Skript mit gegen 40 unterschiedlichen Skripts zur Verwaltung.",
+      "interactive": true,
+      "notes": "Interaktives altes Konsolenmenü. In der Weboberfläche ist es nur noch als Orientierung sichtbar, weil der Browser sonst auf Menüeingaben wartet. Die einzelnen alten Menüpunkte stehen als eigene Einträge unter www.arkons.ch, artserver, Menüplan, RoboWait und Arzttarif."
     },
     {
       "id": "admin.gui.publish.deploy",
@@ -83,13 +85,14 @@
       "enabled": true,
       "risk": "mittel",
       "requiresConfirmation": "",
-      "notes": "Anwendungsspezifisches RoboWait-Menü für Zielsystem, Logs, Dokumentation, Roboter und Spezialaufgaben.",
+      "notes": "Interaktives RoboWait-Konsolenmenü. In der Weboberfläche ist es nur noch als Orientierung sichtbar, weil der Browser sonst auf Menüeingaben wartet. Die einzelnen startbaren RoboWait-Aktionen stehen separat in dieser Kategorie.",
       "run": {
         "type": "LocalCommand",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\robowait-admin.cmd",
         "cwd": "{ProjectsRoot}\\RoboWait",
         "args": []
-      }
+      },
+      "interactive": true
     },
     {
       "id": "admin.menueplan.entrypoints",
@@ -946,9 +949,16 @@
       ],
       "rollback": "Falls der neue Stand fehlerhaft ist, müssen entweder der vorherige GitHub-Stand über arzttarif.update.github eingespielt oder ein Backup manuell wiederhergestellt werden.",
       "run": {
-        "type": "AdminFunction",
-        "function": "Run-ArzttarifDockerDeploy"
-      }
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "28",
+          "-AssumeConfirmed"
+        ]
+      },
+      "notes": "Dieser Eintrag nutzt jetzt den alten artserver-Menüpunkt 28, damit die Weboberfläche ihn wirklich starten kann. Der Weg bleibt ein Sonderfall gegenüber dem GitHub-Deploy."
     },
     {
       "id": "arzttarif.merge.to.main",
@@ -1146,6 +1156,739 @@
         "cwd": "{ProjectsRoot}\\Arzttarif_Assistent_dev",
         "args": [
           "scripts\\clean_json.py"
+        ]
+      }
+    },
+    {
+      "id": "legacy.website.build",
+      "group": "Website",
+      "label": "Website lokal bauen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "1",
+      "summary": "Baut die statische Webseite arkons.ch lokal neu.",
+      "details": "Der alte Menüpunkt 1 ruft den Website-Build auf. Er erzeugt den lokalen Ordner dist neu und verändert artserver nicht.",
+      "whenToUse": "Nach Änderungen an Inhalt, Vorlagen oder Assets der Webseite.",
+      "effect": [
+        "Lokaler Build wird ausgeführt.",
+        "Der Ordner dist wird aktualisiert.",
+        "Auf artserver wird nichts verändert."
+      ],
+      "successCriteria": [
+        "Der Build endet ohne Fehler.",
+        "dist enthält eine aktuelle index.html."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "1"
+        ]
+      }
+    },
+    {
+      "id": "legacy.website.local.preview",
+      "group": "Website",
+      "label": "Website lokal anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 2",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "2",
+      "summary": "Startet die lokale Website-Vorschau im Browser.",
+      "details": "Dieser alte Menüpunkt startet einen dauerhaften lokalen Python-Webserver. In der Weboberfläche ist er bewusst nur dokumentiert, weil ein solcher Server-Job nicht von selbst fertig wird.",
+      "notes": "Für die lokale Vorschau besser start-webseite.cmd oder einen eigenen Terminalstart verwenden.",
+      "whenToUse": "Wenn du die Webseite vor einem Deploy lokal im Browser prüfen willst.",
+      "effect": [
+        "Lokaler Build wird ausgeführt.",
+        "Browser und lokaler Webserver werden gestartet.",
+        "Der Prozess läuft, bis er im Terminal beendet wird."
+      ],
+      "successCriteria": [
+        "Die Webseite öffnet lokal im Browser."
+      ]
+    },
+    {
+      "id": "legacy.website.deploy.preview",
+      "group": "Website",
+      "label": "Website nach artserver-Vorschau deployen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 3",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "WEBSITEDEPLOY",
+      "legacyChoice": "3",
+      "summary": "Kopiert den lokalen Website-Build als neue Vorschau nach artserver.",
+      "details": "Der alte Menüpunkt 3 baut zuerst lokal und überträgt danach das Ergebnis nach /home/art/arkons/www/releases auf artserver. Der aktive Vorschau-Link wird auf den neuen Stand umgelegt.",
+      "whenToUse": "Wenn die lokal geprüfte Webseite auf der artserver-Vorschau erscheinen soll.",
+      "beforeStart": [
+        "Website lokal bauen und grob prüfen.",
+        "Sicherstellen, dass SSH zu artserver funktioniert."
+      ],
+      "effect": [
+        "Lokaler Build wird erstellt.",
+        "Release-Ordner auf artserver wird angelegt.",
+        "Der Vorschau-Symlink wird auf das neue Release gesetzt."
+      ],
+      "successCriteria": [
+        "Das Skript meldet die Vorschau-URL.",
+        "Menüpunkt Website-Status zeigt eine erfolgreiche HTTP-Antwort."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "3",
+          "-AssumeConfirmed"
+        ]
+      }
+    },
+    {
+      "id": "legacy.website.caddy.preview",
+      "group": "Website",
+      "label": "Arkons-Caddy-Vorschau aktivieren oder erneuern",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 4",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "hoch",
+      "requiresConfirmation": "CADDY",
+      "legacyChoice": "4",
+      "summary": "Aktiviert die Caddy-Konfiguration für die interne Website-Vorschau.",
+      "details": "Dieser alte Menüpunkt schreibt auf artserver eine Caddy-Konfiguration und lädt Caddy neu. Dafür ist sudo nötig; darum bleibt der Eintrag im Web vorerst nur dokumentiert.",
+      "notes": "Manuell im Terminal starten, wenn Caddy wirklich geändert werden soll.",
+      "whenToUse": "Wenn die Vorschau-Route fehlt oder nach einer Caddy-Änderung erneuert werden muss.",
+      "beforeStart": [
+        "Wartungsfenster prüfen.",
+        "Caddy-Konfiguration vorher sichern oder kennen."
+      ],
+      "effect": [
+        "Caddy-Datei auf artserver wird geschrieben.",
+        "Caddy wird validiert und neu geladen."
+      ],
+      "successCriteria": [
+        "caddy validate ist erfolgreich.",
+        "Die Vorschau ist im LAN erreichbar."
+      ]
+    },
+    {
+      "id": "legacy.website.status",
+      "group": "Website",
+      "label": "Website- und App-Status prüfen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 5",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "5",
+      "summary": "Prüft die Website-Vorschau und wichtige Apps per HTTP.",
+      "details": "Der alte Menüpunkt 5 fragt mehrere Status-Endpunkte ab und zeigt, ob Caddy und die bekannten Webdienste antworten.",
+      "whenToUse": "Nach einem Website-Deploy, nach Caddy-Änderungen oder wenn eine App nicht erreichbar wirkt.",
+      "effect": [
+        "HTTP-Header und Serverstatus werden gelesen.",
+        "Es werden keine Daten verändert."
+      ],
+      "successCriteria": [
+        "Die erwarteten HTTP-Antworten erscheinen ohne Timeout."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "5"
+        ]
+      }
+    },
+    {
+      "id": "legacy.website.open.preview",
+      "group": "Website",
+      "label": "Vorschau im Browser öffnen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 6",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "6",
+      "summary": "Öffnet die interne Website-Vorschau im Browser.",
+      "details": "Der alte Menüpunkt 6 öffnet die Vorschau-Adresse auf dem Rechner, auf dem die lokale Weboberfläche läuft.",
+      "whenToUse": "Wenn du die aktuelle Vorschau schnell im Browser ansehen willst.",
+      "effect": [
+        "Der Standardbrowser öffnet die Vorschau-URL."
+      ],
+      "successCriteria": [
+        "Browser zeigt die Vorschau-Seite."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "6"
+        ]
+      }
+    },
+    {
+      "id": "legacy.artserver.ssh.shell",
+      "group": "artserver",
+      "label": "SSH-Shell zu artserver",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 7",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "",
+      "legacyChoice": "7",
+      "summary": "Öffnet eine interaktive SSH-Shell zu artserver.",
+      "details": "Dieser alte Menüpunkt ist interaktiv. Eine Weboberfläche kann eine echte SSH-Sitzung schlecht abbilden, deshalb bleibt der Punkt dokumentiert und wird weiterhin am besten im Terminal gestartet.",
+      "notes": "Für echte Shell-Arbeit Terminal öffnen und ssh art@artserver ausführen.",
+      "whenToUse": "Wenn du direkt auf artserver Kommandos eintippen musst.",
+      "effect": [
+        "Ein Terminal mit SSH-Sitzung wird benötigt."
+      ],
+      "successCriteria": [
+        "Die Shell zeigt art@artserver."
+      ]
+    },
+    {
+      "id": "legacy.artserver.services.status",
+      "group": "artserver",
+      "label": "Dienste und Container anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 8",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "8",
+      "summary": "Zeigt systemd-Dienste und Docker-Container auf artserver.",
+      "details": "Der alte Menüpunkt 8 verbindet per SSH mit artserver und listet wichtige Dienste sowie Docker-Container. Wenn Docker ohne sudo nicht lesbar ist, wird das im Log gemeldet.",
+      "whenToUse": "Für eine schnelle Kontrolle nach Neustart, Deploy oder Update.",
+      "effect": [
+        "Dienststatus und Containerlisten werden gelesen.",
+        "Es werden keine Dienste verändert."
+      ],
+      "successCriteria": [
+        "caddy und docker erscheinen aktiv.",
+        "Die erwarteten Container sind sichtbar oder Docker meldet sauber fehlende Rechte."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "8"
+        ]
+      }
+    },
+    {
+      "id": "legacy.artserver.scripts.list",
+      "group": "artserver",
+      "label": "Server-Skripte anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 11",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "11",
+      "summary": "Listet wichtige Skriptorte und bekannte Skripte auf artserver.",
+      "details": "Der alte Menüpunkt 11 zeigt, welche Server-Skripte an den erwarteten Stellen liegen. Das hilft beim Aufräumen und bei der Orientierung.",
+      "whenToUse": "Wenn du wissen willst, welche Skripte auf artserver vorhanden sind.",
+      "effect": [
+        "Dateilisten werden gelesen.",
+        "Es werden keine Dateien verändert."
+      ],
+      "successCriteria": [
+        "Die wichtigen Skriptpfade werden mit Status angezeigt."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "11"
+        ]
+      }
+    },
+    {
+      "id": "legacy.artserver.system.update",
+      "group": "artserver",
+      "label": "artserver Systemupdate starten",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 12",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "hoch",
+      "requiresConfirmation": "UPDATE",
+      "legacyChoice": "12",
+      "summary": "Startet das Ubuntu-Systemupdate auf artserver.",
+      "details": "Dieser alte Menüpunkt kann apt full-upgrade auslösen und bei Bedarf einen Neustart vorbereiten. Wegen sudo, möglichem Reboot und interaktiver Ausgabe bleibt er in der Weboberfläche dokumentiert, aber nicht direkt startbar.",
+      "notes": "Für Systemupdates bewusst im Terminal arbeiten, damit Passwortfragen und Reboot-Meldungen sichtbar bleiben.",
+      "whenToUse": "Nur in einem Wartungsfenster.",
+      "beforeStart": [
+        "Backups und laufende Arbeiten prüfen.",
+        "Sicherstellen, dass du physischen oder VPN-Zugang hast, falls SSH kurz weg ist."
+      ],
+      "effect": [
+        "Pakete können aktualisiert werden.",
+        "Dienste oder der Server können neu starten."
+      ],
+      "successCriteria": [
+        "Update endet ohne Fehler.",
+        "SSH und Webdienste sind danach wieder erreichbar."
+      ]
+    },
+    {
+      "id": "legacy.artserver.borg.restore",
+      "group": "artserver",
+      "label": "Borg Restore Assistent starten",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 13",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "hoch",
+      "requiresConfirmation": "RESTORE",
+      "legacyChoice": "13",
+      "summary": "Startet den interaktiven Borg-Restore-Assistenten.",
+      "details": "Restore kann Daten überschreiben und fragt bewusst mehrfach nach. Dieser Punkt bleibt im Web nur dokumentiert, damit ein Restore nicht aus Versehen im Browser gestartet wird.",
+      "notes": "Restore immer in einer echten SSH-Shell starten und Ausgaben vollständig lesen.",
+      "whenToUse": "Nur wenn eine Wiederherstellung geplant ist.",
+      "beforeStart": [
+        "Klären, welcher Datenstand wiederhergestellt werden soll.",
+        "Aktuellen Zustand sichern, wenn noch verwertbar."
+      ],
+      "effect": [
+        "Daten können durch ältere Backupstände ersetzt werden."
+      ],
+      "successCriteria": [
+        "Restore endet ohne Fehler und die betroffene Anwendung funktioniert danach."
+      ]
+    },
+    {
+      "id": "legacy.artserver.hub.update",
+      "group": "artserver",
+      "label": "artserver-Zentrale einrichten oder aktualisieren",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 19",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "ZENTRALE",
+      "legacyChoice": "19",
+      "summary": "Erstellt oder erneuert die Orientierungshilfe /home/art/artserver-hub.",
+      "details": "Der alte Menüpunkt 19 legt auf artserver eine zentrale Übersicht mit Links und Inventarlisten an. Produktive App-Dateien werden nicht verschoben.",
+      "whenToUse": "Nach Skript-Aufräumarbeiten oder wenn die Übersicht veraltet wirkt.",
+      "effect": [
+        "Übersichtsdateien und symbolische Links unter /home/art/artserver-hub werden erneuert."
+      ],
+      "successCriteria": [
+        "Die Zentrale enthält README, Links und Inventarlisten."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "19",
+          "-AssumeConfirmed"
+        ]
+      }
+    },
+    {
+      "id": "legacy.artserver.hub.show",
+      "group": "artserver",
+      "label": "artserver-Zentrale anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 20",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "20",
+      "summary": "Zeigt die aktuelle artserver-Zentrale.",
+      "details": "Der alte Menüpunkt 20 liest /home/art/artserver-hub/README.md und die dortigen Verweise.",
+      "whenToUse": "Wenn du eine Karte der wichtigsten Serverorte brauchst.",
+      "effect": [
+        "Übersichtsdateien werden gelesen."
+      ],
+      "successCriteria": [
+        "README und Verweise werden angezeigt."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "20"
+        ]
+      }
+    },
+    {
+      "id": "legacy.artserver.documents.show",
+      "group": "artserver",
+      "label": "Server-Dokumente anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 21",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "21",
+      "summary": "Sucht Dokumente und Notizen in den App- und Deploy-Ordnern.",
+      "details": "Der alte Menüpunkt 21 listet Markdown-, Text- und Word-Dateien auf artserver, damit Dokumentation nicht verstreut bleibt.",
+      "whenToUse": "Wenn du vorhandene Server-Dokumentation suchen willst.",
+      "effect": [
+        "Dateilisten werden gelesen."
+      ],
+      "successCriteria": [
+        "Dokumente werden nach Ordnern gruppiert angezeigt."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "21"
+        ]
+      }
+    },
+    {
+      "id": "legacy.artserver.cleanup.candidates",
+      "group": "artserver",
+      "label": "Aufräumkandidaten anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 22",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "22",
+      "summary": "Zeigt temporäre Dateien, Logs und mögliche Altlasten.",
+      "details": "Der alte Menüpunkt 22 liest nur. Er hilft zu entscheiden, was später archiviert oder gelöscht werden könnte.",
+      "whenToUse": "Wenn Speicher oder Ordnung geprüft werden soll.",
+      "effect": [
+        "Grössen und Dateilisten werden gelesen.",
+        "Es wird nichts gelöscht."
+      ],
+      "successCriteria": [
+        "Mögliche Aufräumkandidaten werden mit Pfad und Datum angezeigt."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "22"
+        ]
+      }
+    },
+    {
+      "id": "legacy.docker.status",
+      "group": "Docker",
+      "label": "Docker und Portainer Status anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 23",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "23",
+      "summary": "Zeigt Docker-, Container-, Volume- und Portainer-Status.",
+      "details": "Der alte Menüpunkt 23 fragt bewusst kein sudo-Passwort ab. Wenn Docker-Rechte fehlen, wird das als Hinweis ausgegeben und nicht als Fehler behandelt.",
+      "whenToUse": "Wenn du prüfen willst, ob Docker und Portainer grundsätzlich laufen.",
+      "effect": [
+        "Docker-Status, Ports und HTTP-Test werden gelesen."
+      ],
+      "successCriteria": [
+        "Docker-Dienst ist aktiv und Port 9443 antwortet."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "23"
+        ]
+      }
+    },
+    {
+      "id": "legacy.portainer.open",
+      "group": "Docker",
+      "label": "Portainer im Browser öffnen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 24",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "24",
+      "summary": "Öffnet Portainer im Browser.",
+      "details": "Der Portainer-Login ist ein eigener Benutzer (admin), nicht das Server-sudo-Passwort.",
+      "whenToUse": "Wenn du Container in Portainer ansehen willst.",
+      "effect": [
+        "Der Browser öffnet https://192.168.1.136:9443/."
+      ],
+      "successCriteria": [
+        "Portainer zeigt Login oder Dashboard."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "24"
+        ]
+      }
+    },
+    {
+      "id": "legacy.portainer.install",
+      "group": "Docker",
+      "label": "Portainer installieren oder aktualisieren",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 25",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "hoch",
+      "requiresConfirmation": "PORTAINER",
+      "legacyChoice": "25",
+      "summary": "Installiert oder aktualisiert Portainer CE auf artserver.",
+      "details": "Dieser alte Menüpunkt verändert Docker, Container und systemnahe Dateien. Wegen sudo und Docker-Socket-Zugriff bleibt er im Web vorerst dokumentiert.",
+      "notes": "Portainer-Installation bewusst im Terminal ausführen, wenn Docker-Zugriff und sudo sichtbar sein müssen.",
+      "whenToUse": "Wenn Portainer fehlt oder bewusst aktualisiert werden soll.",
+      "beforeStart": [
+        "Docker-Status prüfen.",
+        "Sicherstellen, dass Port 9443 frei ist."
+      ],
+      "effect": [
+        "Portainer-Container und Volume können angelegt oder aktualisiert werden."
+      ],
+      "successCriteria": [
+        "Portainer ist unter https://192.168.1.136:9443/ erreichbar."
+      ]
+    },
+    {
+      "id": "legacy.artserver.update.reboot.control",
+      "group": "artserver",
+      "label": "Systemupdate, Neustart und Kontrolle",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 26",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "hoch",
+      "requiresConfirmation": "FRISCHSTART",
+      "legacyChoice": "26",
+      "summary": "Führt Systemupdate, Neustart und anschliessende Kontrolle aus.",
+      "details": "Der alte Menüpunkt 26 ist ein kompletter Wartungsablauf mit möglichem Reboot. Er ist dokumentiert, aber in der Weboberfläche nicht direkt freigegeben.",
+      "notes": "Bewusst im Terminal starten, damit sudo-Passwort, SSH-Abbruch und Wiederverbinden kontrollierbar bleiben.",
+      "whenToUse": "Nur in einem echten Wartungsfenster.",
+      "beforeStart": [
+        "Alle laufenden Arbeiten stoppen oder sichern.",
+        "VPN/LAN-Zugriff für die Kontrolle nach dem Neustart sicherstellen."
+      ],
+      "effect": [
+        "Pakete können aktualisiert werden.",
+        "artserver wird neu gestartet.",
+        "Danach werden Dienste und Webseiten geprüft."
+      ],
+      "successCriteria": [
+        "SSH kommt zurück.",
+        "Dienste und Webchecks sind wieder grün."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "26",
+          "-AssumeConfirmed"
+        ]
+      }
+    },
+    {
+      "id": "legacy.robowait.docker.prototype.start",
+      "group": "RoboWait",
+      "label": "RoboWait Docker-Prototyp starten",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 29",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "hoch",
+      "requiresConfirmation": "ROBOWAITDOCKER",
+      "legacyChoice": "29",
+      "summary": "Baut und startet den RoboWait-Docker-Prototyp auf artserver.",
+      "details": "Der alte Menüpunkt 29 baut Container und startet RoboWait im Docker-Betrieb. Wegen sudo und Neustartwirkung bleibt er dokumentiert, bis der Web-Runner dafür sauber vorbereitet ist.",
+      "notes": "Für den normalen Betrieb besser den vorhandenen RoboWait GitHub-Update- oder Smoke-Test-Menüpunkt verwenden.",
+      "whenToUse": "Nur wenn der Docker-Prototyp bewusst neu gebaut werden soll.",
+      "effect": [
+        "Docker-Images werden gebaut.",
+        "RoboWait-Container werden gestartet oder ersetzt."
+      ],
+      "successCriteria": [
+        "Smoke-Test läuft durch."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "29",
+          "-AssumeConfirmed"
+        ]
+      }
+    },
+    {
+      "id": "legacy.portainer.reset.password",
+      "group": "Docker",
+      "label": "Portainer Admin-Passwort zurücksetzen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 31",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "PORTAINERRESET",
+      "legacyChoice": "31",
+      "summary": "Zeigt die getesteten Befehle zum Zurücksetzen des Portainer-Admin-Passworts.",
+      "details": "Der alte Menüpunkt 31 führt den Reset nicht mehr automatisch aus, weil die Passwortzeile über SSH/sudo nicht zuverlässig sichtbar war. Er zeigt die vier Docker-Befehle, die man in der SSH-Shell manuell ausführt.",
+      "whenToUse": "Wenn du dich in Portainer nicht mehr als admin anmelden kannst.",
+      "beforeStart": [
+        "SSH-Shell zu artserver bereithalten.",
+        "Portainer-URL geöffnet lassen."
+      ],
+      "effect": [
+        "Es werden nur die manuellen Befehle angezeigt.",
+        "Automatisch wird kein Volume gelöscht und kein Passwort verändert."
+      ],
+      "successCriteria": [
+        "Die Ausgabe zeigt die Docker-Befehle und erklärt die Passwortzeile."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "31",
+          "-AssumeConfirmed"
+        ]
+      }
+    },
+    {
+      "id": "legacy.artserver.scripts.organize",
+      "group": "artserver",
+      "label": "Skripte ordnen und Altlasten archivieren",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 32",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "hoch",
+      "requiresConfirmation": "SKRIPTORDNUNG",
+      "legacyChoice": "32",
+      "summary": "Archiviert bekannte Altlasten und erneuert den Aufräumbericht.",
+      "details": "Der alte Menüpunkt 32 verschiebt veraltete Dateien in Zeitstempel-Archive. Er löscht bewusst nichts, braucht aber sudo und bleibt darum im Web vorerst nicht direkt freigegeben.",
+      "notes": "Erst im Terminal starten, wenn die geplanten Archivierungen klar sind.",
+      "whenToUse": "Nach Analyse der Skriptordnung, wenn bekannte Altlasten wirklich archiviert werden sollen.",
+      "beforeStart": [
+        "Aufräumkandidaten vorher anzeigen.",
+        "Prüfen, ob produktive Skripte nicht betroffen sind."
+      ],
+      "effect": [
+        "Altlasten werden in Archive verschoben.",
+        "Ein Bericht wird unter artserver-hub abgelegt."
+      ],
+      "successCriteria": [
+        "Der Bericht nennt die archivierten Pfade."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "32",
+          "-AssumeConfirmed"
+        ]
+      }
+    },
+    {
+      "id": "legacy.catalog.show",
+      "group": "artserver",
+      "label": "Zentralen Skriptkatalog anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 34",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "34",
+      "summary": "Zeigt den zentralen Skriptkatalog in der Konsole.",
+      "details": "Der alte Menüpunkt 34 listet alle Katalogeinträge, Risiken, Schutzworte und Quellen.",
+      "whenToUse": "Wenn du den maschinenlesbaren Katalog als Konsolentext prüfen willst.",
+      "effect": [
+        "Der JSON-Katalog wird gelesen und gruppiert angezeigt."
+      ],
+      "successCriteria": [
+        "Alle Kataloggruppen erscheinen in der Ausgabe."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "34"
+        ]
+      }
+    },
+    {
+      "id": "legacy.catalog.run.by.id",
+      "group": "artserver",
+      "label": "Skript aus zentralem Katalog starten",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 35",
+      "location": "Entwicklungsrechner",
+      "enabled": false,
+      "risk": "mittel",
+      "requiresConfirmation": "",
+      "legacyChoice": "35",
+      "summary": "Startet im alten Konsolenmenü ein Skript per Skript-ID.",
+      "details": "Dieser alte Menüpunkt fragt interaktiv nach einer ID. In der Weboberfläche ersetzt jede einzelne Skriptkarte diesen Sammelstarter, darum bleibt er nur dokumentiert.",
+      "notes": "Im Web nicht nötig: Die einzelnen Katalogeinträge haben eigene Startknöpfe.",
+      "whenToUse": "Im alten Terminalmenü, wenn du eine Skript-ID direkt starten willst.",
+      "effect": [
+        "Ein Katalogeintrag wird nach manueller ID-Eingabe gestartet."
+      ],
+      "successCriteria": [
+        "Das gewählte Skript läuft oder meldet Schutzwort/Fehler."
+      ]
+    },
+    {
+      "id": "legacy.project.entrypoints.show",
+      "group": "artserver",
+      "label": "Projekt-Admin-Einstiege anzeigen",
+      "source": "{ProjectsRoot}\\artserver\\artserver-admin.ps1 Auswahl 36",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "legacyChoice": "36",
+      "summary": "Zeigt die lokalen Startpunkte der einzelnen Projekte.",
+      "details": "Der alte Menüpunkt 36 ist eine Karte der vorhandenen Admin- und Deploy-Einstiege für Website, Menüplan, RoboWait und Arzttarif.",
+      "whenToUse": "Wenn du wissen willst, welcher lokale Einstieg zu welchem Projekt gehört.",
+      "effect": [
+        "Lokale Pfade werden geprüft und mit OK oder FEHLT angezeigt."
+      ],
+      "successCriteria": [
+        "Die wichtigsten Projekt-Einstiege werden gefunden."
+      ],
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\artserver-admin.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-Run",
+          "36"
         ]
       }
     }

@@ -90,7 +90,7 @@ if ($status -and -not $SkipCommit) {
     throw "Abgebrochen: keine Commit-Nachricht."
   }
 
-  Invoke-Checked "git" @("add", "admin-gui", "deploy/artserver/admin", "scripts/publish-admin-gui.ps1", "scripts/start-admin-gui-local.cmd", "publish-admin-gui.cmd", "artserver-apps.json", "artserver-script-catalog.json", "admin-gui/README.md", "deploy/artserver/admin/README.md")
+  Invoke-Checked "git" @("add", "admin-gui", "deploy/artserver/admin", "scripts/publish-admin-gui.ps1", "scripts/start-admin-gui-local.cmd", "publish-admin-gui.cmd", "artserver-admin.ps1", "artserver-apps.json", "artserver-script-catalog.json", "admin-gui/README.md", "deploy/artserver/admin/README.md")
   Invoke-Checked "git" @("commit", "-m", $CommitMessage)
 } elseif ($status) {
   Write-Host "Lokale Aenderungen bleiben uncommitted, weil -SkipCommit gesetzt ist." -ForegroundColor Yellow

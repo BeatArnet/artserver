@@ -58,7 +58,12 @@
         }
       ],
       "scriptIds": [
-        "admin.artserver.menu"
+        "legacy.website.build",
+        "legacy.website.local.preview",
+        "legacy.website.deploy.preview",
+        "legacy.website.caddy.preview",
+        "legacy.website.status",
+        "legacy.website.open.preview"
       ],
       "humanNotes": "Die Webseite www.arkons.ch ist bewusst nicht in einem App-Container gespeichert. Sie wird als statisches Release gebaut und über Caddy ausgeliefert."
     },
@@ -84,7 +89,25 @@
       ],
       "scriptIds": [
         "admin.artserver.menu",
-        "admin.gui.publish.deploy"
+        "admin.gui.publish.deploy",
+        "legacy.artserver.ssh.shell",
+        "legacy.artserver.services.status",
+        "legacy.artserver.scripts.list",
+        "legacy.artserver.system.update",
+        "legacy.artserver.borg.restore",
+        "legacy.artserver.hub.update",
+        "legacy.artserver.hub.show",
+        "legacy.artserver.documents.show",
+        "legacy.artserver.cleanup.candidates",
+        "legacy.docker.status",
+        "legacy.portainer.open",
+        "legacy.portainer.install",
+        "legacy.artserver.update.reboot.control",
+        "legacy.portainer.reset.password",
+        "legacy.artserver.scripts.organize",
+        "legacy.catalog.show",
+        "legacy.catalog.run.by.id",
+        "legacy.project.entrypoints.show"
       ],
       "humanNotes": "Dieser Bereich ist für alles zuständig, was nicht direkt zu einer einzelnen Fachanwendung gehört."
     },
@@ -208,7 +231,8 @@
         "robowait.local.flash.esp32",
         "robowait.local.build.android.vision.host",
         "robowait.local.install.android.vision.host",
-        "robowait.participant.export.fallback"
+        "robowait.participant.export.fallback",
+        "legacy.robowait.docker.prototype.start"
       ],
       "humanNotes": "RoboWait besteht aus Web, Reverb und Scheduler. Die Admin-Oberfläche muss diese drei Teile getrennt anzeigen.",
       "summary": "RoboWait besteht aus Web, Reverb und Scheduler. Die Admin-Oberfläche muss diese drei Teile getrennt anzeigen."

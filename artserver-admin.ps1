@@ -1,6 +1,7 @@
 ﻿param(
   [switch]$List,
   [switch]$Help,
+  [switch]$AssumeConfirmed,
   [string]$Run,
   [string]$ScriptId
 )
@@ -563,6 +564,11 @@ function Confirm-DangerousAction {
     [string]$Prompt,
     [string]$Expected
   )
+
+  if ($AssumeConfirmed) {
+    Write-Host "Schutzabfrage wurde durch den Web-Runner vorab bestätigt: $Expected" -ForegroundColor Yellow
+    return $true
+  }
 
   Write-Host ""
   Write-Host $Prompt -ForegroundColor Yellow
@@ -1601,10 +1607,15 @@ if ($Help) {
 
 if ($Run) {
   switch ($Run.Trim()) {
+    "1" { Build-Website }
+    "3" { Deploy-ArtserverPreview }
+    "5" { Show-Status }
+    "6" { Open-PreviewBrowser }
     "8" { Show-ServiceStatus }
     "9" { Run-MenueplanDoctor }
     "10" { Run-MenueplanBackup }
     "11" { Show-ArtserverScripts }
+    "17" { Run-RoboWaitBackup }
     "18" { Run-RoboWaitUpdate }
     "19" { Update-ArtserverHub }
     "20" { Show-ArtserverHub }
@@ -1623,7 +1634,7 @@ if ($Run) {
     "30" { Run-RoboWaitDockerSmoke }
     "31" { Reset-PortainerAdminPassword }
     "33" { Run-ArzttarifDockerGithubUpdate }
-    default { throw "Direkt ausführbar sind aktuell die Menüpunkte 8 bis 11, 18 bis 24 und 26 bis 36. Gewünscht war: $Run" }
+    default { throw "Direkt ausführbar sind aktuell die Menüpunkte 1, 3, 5, 6, 8 bis 11, 17 bis 24 und 26 bis 36. Gewünscht war: $Run" }
   }
   exit 0
 }

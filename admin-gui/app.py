@@ -69,16 +69,27 @@ def risk_class(risk: str) -> str:
 
 def script_is_server_startable(script: dict) -> bool:
     run = script.get("run") or {}
-    return bool(script.get("enabled") is True and script.get("location") == "artserver" and run.get("type") == "ServerShell")
+    return bool(
+        script.get("enabled") is True
+        and not script_is_interactive(script)
+        and script.get("location") == "artserver"
+        and run.get("type") == "ServerShell"
+    )
 
 
 def script_is_local_startable(script: dict) -> bool:
     run = script.get("run") or {}
     return bool(
         script.get("enabled") is True
+        and not script_is_interactive(script)
         and script.get("location") == "Entwicklungsrechner"
         and run.get("type") in {"LocalCommand", "LocalPowerShell"}
     )
+
+
+def script_is_interactive(script: dict) -> bool:
+    run = script.get("run") or {}
+    return bool(script.get("interactive") is True or run.get("interactive") is True)
 
 
 def script_is_startable_here(script: dict) -> bool:
@@ -93,6 +104,8 @@ def script_start_status(script: dict) -> tuple[str, str]:
     location = script.get("location", "")
     if script.get("enabled") is not True:
         return "Start: noch nicht freigegeben", "pill-muted"
+    if script_is_interactive(script):
+        return "Start: Terminal nötig", "pill-muted"
     if location == "artserver" and run_type == "ServerShell":
         return ("Start: auf artserver", "pill-ok") if is_artserver_runtime() else ("Start: auf artserver", "pill-local")
     if location == "Entwicklungsrechner" and run_type in {"LocalCommand", "LocalPowerShell", "AdminFunction"}:
@@ -926,7 +939,9 @@ class Renderer:
         run = script.get("run") or {}
         run_type = run.get("type", "")
         location = script.get("location", "")
-        if script.get("enabled") is not True:
+        if script_is_interactive(script):
+            message = "Dieser Menüpunkt öffnet ein interaktives Terminal-Menü. Im Browser würde er auf Tastatureingaben warten und scheinbar endlos laufen. Bitte stattdessen den passenden einzelnen Menüpunkt hier in der Weboberfläche starten."
+        elif script.get("enabled") is not True:
             message = "Dieser Menüpunkt ist dokumentiert, aber noch nicht für den direkten Start freigegeben."
         elif location == "artserver" and not is_artserver_runtime():
             message = "Dieser Menüpunkt läuft auf artserver. Die lokale Weboberfläche zeigt ihn an, startet ihn aber nicht direkt."
