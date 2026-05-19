@@ -27,7 +27,23 @@ cd /home/art/arkons/deploy/artserver
 python3 admin-gui/app.py --host 127.0.0.1 --port 18010
 ```
 
-Später soll diese Anwendung in einen eigenen Container `arkons-admin`.
+Empfohlener Betrieb auf artserver: als normaler systemd-Dienst `arkons-admin-web`, nicht als Container. Der Dienst bindet intern an `127.0.0.1:18010`; der Zugriff von anderen Geräten soll nur über LAN/VPN erfolgen.
+
+## Admin-GUI veröffentlichen
+
+Vom Entwicklungsrechner:
+
+```powershell
+.\publish-admin-gui.cmd -CommitMessage "Admin-GUI aktualisieren"
+```
+
+Aus der lokalen Weboberfläche:
+
+```text
+artserver -> Admin-GUI nach GitHub pushen und auf artserver installieren
+```
+
+Der Web-Start nutzt den Schutzbegriff `ADMINGUI`. Falls artserver für systemd oder Caddy ein sudo-Passwort braucht, bricht der Web-Job nicht-interaktiv ab. Dann das gleiche Skript im Terminal starten, damit das sudo-Passwort eingegeben werden kann.
 
 ## Aktueller Funktionsumfang
 

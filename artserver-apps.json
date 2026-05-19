@@ -83,7 +83,8 @@
         }
       ],
       "scriptIds": [
-        "admin.artserver.menu"
+        "admin.artserver.menu",
+        "admin.gui.publish.deploy"
       ],
       "humanNotes": "Dieser Bereich ist für alles zuständig, was nicht direkt zu einer einzelnen Fachanwendung gehört."
     },

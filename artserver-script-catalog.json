@@ -21,6 +21,49 @@
       "details": "Kommandozeilenbasiertes Bash-Skript mit gegen 40 unterschiedlichen Skripts zur Verwaltung."
     },
     {
+      "id": "admin.gui.publish.deploy",
+      "group": "artserver",
+      "label": "Admin-GUI nach GitHub pushen und auf artserver installieren",
+      "source": "{ProjectsRoot}\\artserver\\scripts\\publish-admin-gui.ps1",
+      "location": "Entwicklungsrechner",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "ADMINGUI",
+      "summary": "Pusht die lokale Administrationsoberfläche nach GitHub und aktualisiert danach den Dienst auf artserver.",
+      "details": "Dieser Schritt ist der komplette Veröffentlichungsweg für die Admin-Weboberfläche: lokale Prüfungen, Commit mit Standardnachricht, Push nach GitHub, danach SSH auf artserver und Installation beziehungsweise Neustart des systemd-Dienstes. Die Weboberfläche bleibt nur intern über LAN/VPN vorgesehen.",
+      "whenToUse": "Wenn Änderungen an der Admin-GUI fertig sind und auf artserver laufen sollen.",
+      "beforeStart": [
+        "Prüfen, ob die lokalen Änderungen wirklich veröffentlicht werden sollen.",
+        "Die Weboberfläche lokal kurz öffnen und grobe Fehler ausschliessen.",
+        "GitHub- und SSH-Zugang zu artserver müssen funktionieren."
+      ],
+      "effect": [
+        "Lokale Änderungen an Admin-GUI, Katalog und Deploy-Skripten werden committet.",
+        "Der Commit wird nach GitHub gepusht.",
+        "artserver holt den neuen Stand aus GitHub.",
+        "Der systemd-Dienst arkons-admin-web wird eingerichtet oder neu gestartet."
+      ],
+      "successCriteria": [
+        "Das Skript endet ohne Fehler.",
+        "Der Dienst arkons-admin-web ist auf artserver aktiv.",
+        "Die Admin-GUI ist im LAN/VPN erreichbar."
+      ],
+      "rollback": "Wenn der Deploy fehlschlägt, zuerst das Web-Job-Log und die SSH-Ausgabe lesen. Auf artserver kann der vorherige Git-Stand wieder ausgecheckt und der Dienst neu gestartet werden.",
+      "run": {
+        "type": "LocalPowerShell",
+        "path": "{ProjectsRoot}\\artserver\\scripts\\publish-admin-gui.ps1",
+        "cwd": "{ProjectsRoot}\\artserver",
+        "args": [
+          "-CommitMessage",
+          "Admin-GUI via Weboberfläche aktualisieren",
+          "-NonInteractiveSudo"
+        ],
+        "dryRunArgs": [
+          "-DryRun"
+        ]
+      }
+    },
+    {
       "id": "admin.robowait.menu",
       "group": "Projekt-Admin-Einstiege",
       "label": "RoboWait Admin-Menü",

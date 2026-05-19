@@ -11,6 +11,7 @@ LAN_IP="${ARKONS_ADMIN_LAN_IP:-192.168.1.136}"
 LAN_PORT="${ARKONS_ADMIN_LAN_PORT:-18110}"
 LOG_DIR="${ARKONS_ADMIN_WEB_LOG_DIR:-/home/art/arkons/logs/admin/jobs}"
 CADDY_SITE="${ARKONS_ADMIN_CADDY_SITE:-/etc/caddy/sites-enabled/arkons-admin-lan.caddy}"
+SUDO="${ARKONS_ADMIN_SUDO:-sudo}"
 SKIP_CADDY=0
 FORCE=0
 
@@ -79,7 +80,7 @@ safe_git_name() {
 
 need_cmd git
 need_cmd python3
-need_cmd sudo
+need_cmd "${SUDO%% *}"
 need_cmd curl
 
 safe_git_name "$BRANCH" || { echo "Unsicherer Branch-Name: $BRANCH" >&2; exit 2; }
@@ -142,12 +143,12 @@ RestartSec=5
 WantedBy=multi-user.target
 UNIT
 
-sudo install -m 0644 "$service_file" "/etc/systemd/system/${SERVICE_NAME}.service"
+${SUDO} install -m 0644 "$service_file" "/etc/systemd/system/${SERVICE_NAME}.service"
 rm -f "$service_file"
-sudo systemctl daemon-reload
-sudo systemctl enable "$SERVICE_NAME"
-sudo systemctl restart "$SERVICE_NAME"
-sudo systemctl is-active --quiet "$SERVICE_NAME"
+${SUDO} systemctl daemon-reload
+${SUDO} systemctl enable "$SERVICE_NAME"
+${SUDO} systemctl restart "$SERVICE_NAME"
+${SUDO} systemctl is-active --quiet "$SERVICE_NAME"
 
 log "Interner HTTP-Test"
 curl -fsS "http://${SERVICE_HOST}:${SERVICE_PORT}/" >/dev/null
@@ -155,9 +156,9 @@ curl -fsS "http://${SERVICE_HOST}:${SERVICE_PORT}/" >/dev/null
 if [[ "$SKIP_CADDY" != "1" ]]; then
   log "Interne LAN/VPN-Caddy-Route installieren"
   need_cmd caddy
-  sudo install -d -m 0755 "$(dirname "$CADDY_SITE")" /etc/caddy/backups
+  ${SUDO} install -d -m 0755 "$(dirname "$CADDY_SITE")" /etc/caddy/backups
   if [[ -f "$CADDY_SITE" ]]; then
-    sudo cp -a "$CADDY_SITE" "/etc/caddy/backups/$(basename "$CADDY_SITE").$(date +%Y%m%d-%H%M%S)"
+    ${SUDO} cp -a "$CADDY_SITE" "/etc/caddy/backups/$(basename "$CADDY_SITE").$(date +%Y%m%d-%H%M%S)"
   fi
 
   caddy_tmp="$(mktemp)"
@@ -172,17 +173,17 @@ http://${LAN_IP}:${LAN_PORT} {
 }
 CADDY
 
-  sudo install -m 0644 "$caddy_tmp" "$CADDY_SITE"
+  ${SUDO} install -m 0644 "$caddy_tmp" "$CADDY_SITE"
   rm -f "$caddy_tmp"
 
-  if ! sudo grep -Eq 'sites-enabled/.+\\.caddy|sites-enabled/\\*\\.caddy' /etc/caddy/Caddyfile; then
+  if ! ${SUDO} grep -Eq 'sites-enabled/.+\\.caddy|sites-enabled/\\*\\.caddy' /etc/caddy/Caddyfile; then
     echo "Warnung: /etc/caddy/Caddyfile scheint /etc/caddy/sites-enabled/*.caddy nicht zu importieren." >&2
     echo "Die Datei wurde geschrieben, Caddy koennte sie aber ignorieren: $CADDY_SITE" >&2
   fi
 
-  sudo caddy validate --config /etc/caddy/Caddyfile
-  sudo systemctl reload caddy
-  sudo systemctl is-active --quiet caddy
+  ${SUDO} caddy validate --config /etc/caddy/Caddyfile
+  ${SUDO} systemctl reload caddy
+  ${SUDO} systemctl is-active --quiet caddy
 fi
 
 log "Status"

@@ -7,6 +7,7 @@ param(
   [switch]$SkipPush,
   [switch]$SkipDeploy,
   [switch]$SkipCaddy,
+  [switch]$NonInteractiveSudo,
   [switch]$DryRun
 )
 
@@ -109,7 +110,11 @@ if (-not $SkipDeploy) {
     $remoteArgs += "--skip-caddy"
   }
 
-  $remoteCommand = "bash -s -- " + (($remoteArgs | ForEach-Object { "'" + ($_ -replace "'", "'\''") + "'" }) -join " ")
+  $envPrefix = ""
+  if ($NonInteractiveSudo) {
+    $envPrefix = "ARKONS_ADMIN_SUDO='sudo -n' "
+  }
+  $remoteCommand = $envPrefix + "bash -s -- " + (($remoteArgs | ForEach-Object { "'" + ($_ -replace "'", "'\''") + "'" }) -join " ")
   Write-Host ("> ssh $Server $remoteCommand") -ForegroundColor DarkGray
   if (-not $DryRun) {
     Get-Content -LiteralPath $DeployScript -Raw | & ssh $Server $remoteCommand

@@ -7,6 +7,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import shlex
 import socket
 import subprocess
@@ -71,6 +72,21 @@ def script_is_server_startable(script: dict) -> bool:
     return bool(script.get("enabled") is True and script.get("location") == "artserver" and run.get("type") == "ServerShell")
 
 
+def script_is_local_startable(script: dict) -> bool:
+    run = script.get("run") or {}
+    return bool(
+        script.get("enabled") is True
+        and script.get("location") == "Entwicklungsrechner"
+        and run.get("type") in {"LocalCommand", "LocalPowerShell"}
+    )
+
+
+def script_is_startable_here(script: dict) -> bool:
+    if is_artserver_runtime():
+        return script_is_server_startable(script)
+    return script_is_local_startable(script)
+
+
 def script_start_status(script: dict) -> tuple[str, str]:
     run = script.get("run") or {}
     run_type = run.get("type", "")
@@ -78,9 +94,9 @@ def script_start_status(script: dict) -> tuple[str, str]:
     if script.get("enabled") is not True:
         return "Start: noch nicht freigegeben", "pill-muted"
     if location == "artserver" and run_type == "ServerShell":
-        return "Start: auf artserver", "pill-ok"
+        return ("Start: auf artserver", "pill-ok") if is_artserver_runtime() else ("Start: auf artserver", "pill-local")
     if location == "Entwicklungsrechner" and run_type in {"LocalCommand", "LocalPowerShell", "AdminFunction"}:
-        return "Start: Entwicklungsrechner", "pill-local"
+        return ("Start: hier lokal", "pill-ok") if not is_artserver_runtime() and run_type != "AdminFunction" else ("Start: Entwicklungsrechner", "pill-local")
     return "Start: Ausführung prüfen", "pill-muted"
 
 
@@ -118,6 +134,68 @@ def bash_path(path: Path) -> str:
                 return candidate
         return candidates[0]
     return text
+
+
+def expand_catalog_value(value: object) -> str:
+    text = "" if value is None else str(value)
+    return text.replace("{Root}", str(ROOT)).replace("{ProjectsRoot}", str(ROOT.parent))
+
+
+def catalog_args(values: object) -> list[str]:
+    if not values:
+        return []
+    if isinstance(values, list):
+        return [expand_catalog_value(item) for item in values]
+    return [expand_catalog_value(values)]
+
+
+def local_powershell_command(run: dict, dry_run: bool) -> tuple[list[str], Path, bool]:
+    script_path = Path(expand_catalog_value(run.get("path")))
+    cwd = Path(expand_catalog_value(run.get("cwd") or ROOT))
+    shell = shutil.which("pwsh") or shutil.which("powershell")
+    if not shell:
+        raise FileNotFoundError("PowerShell wurde nicht gefunden.")
+    args = ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script_path)]
+    args.extend(catalog_args(run.get("args")))
+    dry_args = catalog_args(run.get("dryRunArgs"))
+    if dry_run:
+        if not dry_args:
+            return [shell, *args], cwd, False
+        args.extend(dry_args)
+    return [shell, *args], cwd, True
+
+
+def local_command(run: dict, dry_run: bool) -> tuple[list[str], Path, bool]:
+    program = expand_catalog_value(run.get("path"))
+    cwd = Path(expand_catalog_value(run.get("cwd") or ROOT))
+    args = catalog_args(run.get("args"))
+    dry_args = catalog_args(run.get("dryRunArgs"))
+    if dry_run:
+        if not dry_args:
+            return [program, *args], cwd, False
+        args.extend(dry_args)
+    suffix = Path(program).suffix.lower()
+    if suffix in {".cmd", ".bat"}:
+        return ["cmd.exe", "/c", program, *args], cwd, True
+    return [program, *args], cwd, True
+
+
+def build_execution(script: dict, dry_run: bool, runner_path: Path, confirmation: str) -> tuple[list[str], Path, bool]:
+    run = script.get("run") or {}
+    run_type = run.get("type")
+    if script_is_server_startable(script) and is_artserver_runtime():
+        command = ["bash", bash_path(runner_path), "run", str(script.get("id", ""))]
+        if confirmation:
+            command.extend(["--confirm", confirmation])
+        if dry_run:
+            command.append("--dry-run")
+        return command, ROOT, True
+    if script_is_local_startable(script) and not is_artserver_runtime():
+        if run_type == "LocalPowerShell":
+            return local_powershell_command(run, dry_run)
+        if run_type == "LocalCommand":
+            return local_command(run, dry_run)
+    raise ValueError("Dieses Skript ist auf dieser Maschine nicht direkt startbar.")
 
 
 def is_artserver_runtime() -> bool:
@@ -690,12 +768,11 @@ class Renderer:
 
     def script_block(self, script: dict, areas: list[str] | None = None, show_edit_link: bool = False) -> str:
         run = script.get("run") or {}
-        server_startable = script_is_server_startable(script)
         start_label, start_class = script_start_status(script)
         risk = script.get("risk", "unbekannt")
         confirmation = script.get("requiresConfirmation") or ""
         area_text = ", ".join(areas or [])
-        action_form = self.action_form(script) if server_startable else self.not_startable_box(script)
+        action_form = self.action_form(script) if script_is_startable_here(script) else self.not_startable_box(script)
         script_id = script.get("id", "")
 
         return f"""
@@ -813,8 +890,10 @@ class Renderer:
         location = script.get("location", "")
         if script.get("enabled") is not True:
             message = "Dieser Menüpunkt ist dokumentiert, aber noch nicht für den direkten Start freigegeben."
+        elif location == "artserver" and not is_artserver_runtime():
+            message = "Dieser Menüpunkt läuft auf artserver. Die lokale Weboberfläche zeigt ihn an, startet ihn aber nicht direkt."
         elif location == "Entwicklungsrechner":
-            message = "Dieser Menüpunkt ist für den Entwicklungsrechner vorgesehen. Wenn die Weboberfläche später auf artserver läuft, kann artserver dieses lokale Windows-Skript nicht direkt starten."
+            message = "Dieser Menüpunkt ist für den Entwicklungsrechner vorgesehen. Auf artserver kann dieses lokale Windows-Skript nicht direkt gestartet werden."
         else:
             message = "Dieser Menüpunkt hat eine technische Ausführung, passt aber noch nicht zum aktuellen Web-Runner."
         return f"""
@@ -1278,7 +1357,7 @@ class Handler(BaseHTTPRequestHandler):
         if not script:
             self.send_html(self.renderer.error_page(f"Skript-ID nicht gefunden: {script_id}"), status=404)
             return
-        if not script_is_server_startable(script):
+        if not script_is_startable_here(script):
             start_label, _ = script_start_status(script)
             self.send_html(self.renderer.error_page(f"Dieses Skript kann hier noch nicht direkt gestartet werden. Status: {start_label}."), status=400)
             return
@@ -1287,24 +1366,32 @@ class Handler(BaseHTTPRequestHandler):
             self.send_html(self.renderer.error_page(f"Schutzwort fehlt oder stimmt nicht. Erwartet wird: {expected}"), status=400)
             return
 
-        runner_path = bash_path(self.data.runner_path)
-        command = ["bash", runner_path, "run", script_id]
-        if expected:
-            command.extend(["--confirm", confirmation])
-        if dry_run:
-            command.append("--dry-run")
+        try:
+            command, cwd, should_execute = build_execution(script, dry_run, self.data.runner_path, confirmation)
+        except (FileNotFoundError, ValueError) as exc:
+            self.send_html(self.renderer.error_page(f"Skript konnte nicht vorbereitet werden: {exc}"), status=500)
+            return
+
+        if dry_run and not should_execute:
+            stdout = "Dry-run: kein Befehl gestartet.\n"
+            stdout += f"Ordner: {cwd}\n"
+            stdout += f"Befehl: {' '.join(command)}\n"
+            result = subprocess.CompletedProcess(command, 0, stdout, "")
+            log_path, log_error = self.write_job_log(script, command, result, dry_run)
+            self.send_html(self.renderer.job_result_page(script, command, result, dry_run, log_path, log_error), status=200)
+            return
 
         try:
             result = subprocess.run(
                 command,
-                cwd=str(ROOT),
+                cwd=str(cwd),
                 capture_output=True,
                 text=True,
                 timeout=3600,
                 check=False,
             )
         except FileNotFoundError as exc:
-            self.send_html(self.renderer.error_page(f"Runner konnte nicht gestartet werden: {exc}"), status=500)
+            self.send_html(self.renderer.error_page(f"Skript konnte nicht gestartet werden: {exc}"), status=500)
             return
         except subprocess.TimeoutExpired as exc:
             stdout = exc.stdout if isinstance(exc.stdout, str) else ""
