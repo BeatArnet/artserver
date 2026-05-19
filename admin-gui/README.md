@@ -29,6 +29,12 @@ python3 admin-gui/app.py --host 127.0.0.1 --port 18010
 
 Empfohlener Betrieb auf artserver: als normaler systemd-Dienst `arkons-admin-web`, nicht als Container. Der Dienst bindet intern an `127.0.0.1:18010`; der Zugriff von anderen Geräten soll nur über LAN/VPN erfolgen.
 
+Nach erfolgreichem Deploy ist die Weboberfläche im LAN/VPN erreichbar unter:
+
+```text
+http://192.168.1.136:18110/
+```
+
 ## Admin-GUI veröffentlichen
 
 Vom Entwicklungsrechner:
@@ -64,6 +70,7 @@ Der Web-Start nutzt den Schutzbegriff `ADMINGUI`. Er fragt bewusst kein sudo-Pas
 - Start und Dry-run für freigegebene artserver-Skripte
 - Schutzwort-Eingabe bei riskanteren Aktionen
 - Publish-Deploy per GitHub mit einmaligem sudo-Helfer für den Browser-Start
+- Deploy-Ausgabe zeigt am Schluss die interne Adresse und die LAN/VPN-URL
 
 Noch nicht enthalten:
 

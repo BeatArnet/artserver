@@ -47,7 +47,8 @@
       "successCriteria": [
         "Das Skript endet ohne Fehler.",
         "Der Dienst arkons-admin-web ist auf artserver aktiv.",
-        "Die Admin-GUI ist im LAN/VPN erreichbar."
+        "Die Admin-GUI ist im LAN/VPN unter http://192.168.1.136:18110/ erreichbar.",
+        "Die Ausgabe zeigt am Schluss die interne Adresse und die LAN/VPN-URL."
       ],
       "rollback": "Wenn der Deploy fehlschlägt, zuerst das Web-Job-Log und die SSH-Ausgabe lesen. Auf artserver kann der vorherige Git-Stand wieder ausgecheckt und der Dienst neu gestartet werden.",
       "run": {

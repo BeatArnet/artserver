@@ -241,6 +241,16 @@ need_cmd curl
 need_cmd ss
 need_cmd fuser
 
+print_url_info() {
+  log "Web-Oberfläche"
+  if [[ "$SKIP_CADDY" != "1" ]]; then
+    echo "URL im LAN/VPN: http://${LAN_IP}:${LAN_PORT}/"
+  else
+    echo "LAN/VPN-URL wurde übersprungen, weil --skip-caddy gesetzt ist."
+  fi
+  echo "Intern auf artserver: http://${SERVICE_HOST}:${SERVICE_PORT}/"
+}
+
 log "Log-Ordner vorbereiten"
 install -d -m 0755 -o art -g art "$LOG_DIR"
 
@@ -286,10 +296,25 @@ fi
 systemctl daemon-reload
 systemctl enable "$SERVICE_NAME"
 systemctl restart "$SERVICE_NAME"
-systemctl is-active --quiet "$SERVICE_NAME"
 
 log "Interner HTTP-Test"
-curl -fsS "http://${SERVICE_HOST}:${SERVICE_PORT}/" >/dev/null
+http_ok=0
+for attempt in $(seq 1 30); do
+  if systemctl is-active --quiet "$SERVICE_NAME" && curl -fsS "http://${SERVICE_HOST}:${SERVICE_PORT}/" >/dev/null; then
+    http_ok=1
+    break
+  fi
+  sleep 0.5
+done
+
+if [[ "$http_ok" != "1" ]]; then
+  echo "Admin-Webdienst wurde gestartet, antwortet aber nicht auf http://${SERVICE_HOST}:${SERVICE_PORT}/." >&2
+  echo "" >&2
+  systemctl --no-pager --full status "$SERVICE_NAME" >&2 || true
+  echo "" >&2
+  journalctl --no-pager -u "$SERVICE_NAME" -n 40 >&2 || true
+  exit 7
+fi
 
 if [[ "$SKIP_CADDY" != "1" ]]; then
   log "Interne LAN/VPN-Caddy-Route installieren"
@@ -326,10 +351,7 @@ fi
 log "Status"
 systemctl --no-pager --full status "$SERVICE_NAME" | sed -n '1,18p'
 echo ""
-echo "Intern auf artserver: http://${SERVICE_HOST}:${SERVICE_PORT}/"
-if [[ "$SKIP_CADDY" != "1" ]]; then
-  echo "LAN/VPN: http://${LAN_IP}:${LAN_PORT}/"
-fi
+print_url_info
 HELPER
 }
 
@@ -360,16 +382,43 @@ run_privileged_apply() {
     exit 5
   fi
 
-  if ! ${SUDO} "$PRIVILEGED_HELPER" "$@"; then
-    echo "" >&2
-    echo "Privilegierter Admin-Web-Schritt fehlgeschlagen." >&2
-    if [[ "$SUDO" == *"-n"* ]]; then
-      echo "Der Web-Start kann kein sudo-Passwort eingeben." >&2
-      echo "Einmalig im PowerShell-Terminal ausführen:" >&2
-      echo "  .\\publish-admin-gui.cmd -CommitMessage \"Admin-GUI sudo-Helfer installieren\" -InstallSudoHelper" >&2
-    fi
-    exit 6
+  if ${SUDO} "$PRIVILEGED_HELPER" "$@"; then
+    return 0
   fi
+
+  echo "" >&2
+  echo "Privilegierter Admin-Web-Schritt meldete einen Fehler. Prüfe, ob der Dienst inzwischen trotzdem läuft." >&2
+  recovered=0
+  for attempt in $(seq 1 30); do
+    if curl -fsS "http://${SERVICE_HOST}:${SERVICE_PORT}/" >/dev/null; then
+      recovered=1
+      break
+    fi
+    sleep 0.5
+  done
+
+  if [[ "$recovered" == "1" && "$SKIP_CADDY" != "1" ]]; then
+    if ! curl -fsS "http://${LAN_IP}:${LAN_PORT}/" >/dev/null; then
+      recovered=0
+    fi
+  fi
+
+  if [[ "$recovered" == "1" ]]; then
+    echo "Der Dienst antwortet nach kurzer Wartezeit. Deploy wird als erfolgreich behandelt." >&2
+    echo "URL im LAN/VPN: http://${LAN_IP}:${LAN_PORT}/" >&2
+    echo "Intern auf artserver: http://${SERVICE_HOST}:${SERVICE_PORT}/" >&2
+    return 0
+  fi
+
+  echo "" >&2
+  echo "Privilegierter Admin-Web-Schritt fehlgeschlagen." >&2
+  systemctl --no-pager --full status "$SERVICE_NAME" >&2 || true
+  if [[ "$SUDO" == *"-n"* ]]; then
+    echo "Der Web-Start kann kein sudo-Passwort eingeben." >&2
+    echo "Einmalig im PowerShell-Terminal ausführen:" >&2
+    echo "  .\\publish-admin-gui.cmd -CommitMessage \"Admin-GUI sudo-Helfer installieren\" -InstallSudoHelper" >&2
+  fi
+  exit 6
 }
 
 need_cmd git
