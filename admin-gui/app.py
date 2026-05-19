@@ -141,23 +141,30 @@ def expand_catalog_value(value: object) -> str:
     return text.replace("{Root}", str(ROOT)).replace("{ProjectsRoot}", str(ROOT.parent))
 
 
-def catalog_args(values: object) -> list[str]:
+def expand_placeholders(text: str, parameters: dict[str, str]) -> str:
+    for key, value in parameters.items():
+        text = text.replace("{" + key + "}", value)
+    return text
+
+
+def catalog_args(values: object, parameters: dict[str, str] | None = None) -> list[str]:
+    parameters = parameters or {}
     if not values:
         return []
     if isinstance(values, list):
-        return [expand_catalog_value(item) for item in values]
-    return [expand_catalog_value(values)]
+        return [expand_placeholders(expand_catalog_value(item), parameters) for item in values]
+    return [expand_placeholders(expand_catalog_value(values), parameters)]
 
 
-def local_powershell_command(run: dict, dry_run: bool) -> tuple[list[str], Path, bool]:
+def local_powershell_command(run: dict, dry_run: bool, parameters: dict[str, str]) -> tuple[list[str], Path, bool]:
     script_path = Path(expand_catalog_value(run.get("path")))
     cwd = Path(expand_catalog_value(run.get("cwd") or ROOT))
     shell = shutil.which("pwsh") or shutil.which("powershell")
     if not shell:
         raise FileNotFoundError("PowerShell wurde nicht gefunden.")
     args = ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script_path)]
-    args.extend(catalog_args(run.get("args")))
-    dry_args = catalog_args(run.get("dryRunArgs"))
+    args.extend(catalog_args(run.get("args"), parameters))
+    dry_args = catalog_args(run.get("dryRunArgs"), parameters)
     if dry_run:
         if not dry_args:
             return [shell, *args], cwd, False
@@ -165,11 +172,11 @@ def local_powershell_command(run: dict, dry_run: bool) -> tuple[list[str], Path,
     return [shell, *args], cwd, True
 
 
-def local_command(run: dict, dry_run: bool) -> tuple[list[str], Path, bool]:
+def local_command(run: dict, dry_run: bool, parameters: dict[str, str]) -> tuple[list[str], Path, bool]:
     program = expand_catalog_value(run.get("path"))
     cwd = Path(expand_catalog_value(run.get("cwd") or ROOT))
-    args = catalog_args(run.get("args"))
-    dry_args = catalog_args(run.get("dryRunArgs"))
+    args = catalog_args(run.get("args"), parameters)
+    dry_args = catalog_args(run.get("dryRunArgs"), parameters)
     if dry_run:
         if not dry_args:
             return [program, *args], cwd, False
@@ -180,7 +187,7 @@ def local_command(run: dict, dry_run: bool) -> tuple[list[str], Path, bool]:
     return [program, *args], cwd, True
 
 
-def build_execution(script: dict, dry_run: bool, runner_path: Path, confirmation: str) -> tuple[list[str], Path, bool]:
+def build_execution(script: dict, dry_run: bool, runner_path: Path, confirmation: str, parameters: dict[str, str]) -> tuple[list[str], Path, bool]:
     run = script.get("run") or {}
     run_type = run.get("type")
     if script_is_server_startable(script) and is_artserver_runtime():
@@ -192,9 +199,9 @@ def build_execution(script: dict, dry_run: bool, runner_path: Path, confirmation
         return command, ROOT, True
     if script_is_local_startable(script) and not is_artserver_runtime():
         if run_type == "LocalPowerShell":
-            return local_powershell_command(run, dry_run)
+            return local_powershell_command(run, dry_run, parameters)
         if run_type == "LocalCommand":
-            return local_command(run, dry_run)
+            return local_command(run, dry_run, parameters)
     raise ValueError("Dieses Skript ist auf dieser Maschine nicht direkt startbar.")
 
 
@@ -863,6 +870,35 @@ class Renderer:
         return '<div class="help-stack">' + "".join(html_blocks) + "</div>"
 
     def action_form(self, script: dict) -> str:
+        run = script.get("run") or {}
+        parameter_fields = []
+        for parameter in run.get("parameters") or []:
+            if not isinstance(parameter, dict):
+                continue
+            name = str(parameter.get("name") or "").strip()
+            if not name:
+                continue
+            label = str(parameter.get("label") or name)
+            value = str(parameter.get("default") or "")
+            placeholder = str(parameter.get("placeholder") or "")
+            required = " required" if parameter.get("required") is True else ""
+            field_type = str(parameter.get("type") or "text")
+            if field_type == "textarea":
+                parameter_fields.append(f"""
+<label class="parameter-field parameter-field-wide">
+  {esc(label)}
+  <textarea name="param_{esc(name)}" placeholder="{esc(placeholder)}"{required}>{esc(value)}</textarea>
+</label>
+""")
+                continue
+            input_type = field_type if field_type in {"email", "number", "password", "text", "url"} else "text"
+            parameter_fields.append(f"""
+<label class="parameter-field parameter-field-wide">
+  {esc(label)}
+  <input type="{esc(input_type)}" name="param_{esc(name)}" value="{esc(value)}" placeholder="{esc(placeholder)}"{required}>
+</label>
+""")
+
         confirmation = script.get("requiresConfirmation") or ""
         confirmation_field = ""
         if confirmation:
@@ -876,6 +912,7 @@ class Renderer:
             confirmation_field = '<input type="hidden" name="confirmation" value="">'
         return f"""
 <form class="action-form" method="post" action="/run/{esc(script.get("id", ""))}">
+  {"".join(parameter_fields)}
   {confirmation_field}
   <div class="button-row">
     <button type="submit" name="mode" value="run">Starten</button>
@@ -1349,9 +1386,14 @@ class Handler(BaseHTTPRequestHandler):
         confirmation = (form.get("confirmation") or [""])[0].strip()
         mode = (form.get("mode") or ["run"])[0]
         dry_run = mode == "dry-run"
-        self.run_script(script_id, confirmation, dry_run)
+        parameters = {
+            key.removeprefix("param_"): (values[0] if values else "").strip()
+            for key, values in form.items()
+            if key.startswith("param_")
+        }
+        self.run_script(script_id, confirmation, dry_run, parameters)
 
-    def run_script(self, script_id: str, confirmation: str, dry_run: bool) -> None:
+    def run_script(self, script_id: str, confirmation: str, dry_run: bool, submitted_parameters: dict[str, str] | None = None) -> None:
         _, _, scripts = self.data.load()
         script = scripts.get(script_id)
         if not script:
@@ -1366,8 +1408,30 @@ class Handler(BaseHTTPRequestHandler):
             self.send_html(self.renderer.error_page(f"Schutzwort fehlt oder stimmt nicht. Erwartet wird: {expected}"), status=400)
             return
 
+        submitted_parameters = submitted_parameters or {}
+        parameters: dict[str, str] = {}
+        missing_parameters = []
+        for definition in (script.get("run") or {}).get("parameters") or []:
+            if not isinstance(definition, dict):
+                continue
+            name = str(definition.get("name") or "").strip()
+            if not name:
+                continue
+            label = str(definition.get("label") or name)
+            value = submitted_parameters.get(name)
+            if value is None:
+                value = str(definition.get("default") or "")
+            value = value.strip()
+            if definition.get("required") is True and not value:
+                missing_parameters.append(label)
+            parameters[name] = value
+        if missing_parameters:
+            joined = ", ".join(missing_parameters)
+            self.send_html(self.renderer.error_page(f"Pflichtfeld fehlt: {joined}"), status=400)
+            return
+
         try:
-            command, cwd, should_execute = build_execution(script, dry_run, self.data.runner_path, confirmation)
+            command, cwd, should_execute = build_execution(script, dry_run, self.data.runner_path, confirmation, parameters)
         except (FileNotFoundError, ValueError) as exc:
             self.send_html(self.renderer.error_page(f"Skript konnte nicht vorbereitet werden: {exc}"), status=500)
             return

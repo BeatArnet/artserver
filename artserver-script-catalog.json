@@ -55,11 +55,20 @@
         "cwd": "{ProjectsRoot}\\artserver",
         "args": [
           "-CommitMessage",
-          "Admin-GUI via Weboberfläche aktualisieren",
+          "{commitMessage}",
           "-NonInteractiveSudo"
         ],
         "dryRunArgs": [
           "-DryRun"
+        ],
+        "parameters": [
+          {
+            "name": "commitMessage",
+            "label": "Commit-Nachricht",
+            "type": "text",
+            "required": true,
+            "default": "Admin-GUI aktualisieren"
+          }
         ]
       }
     },

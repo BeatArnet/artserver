@@ -110,14 +110,30 @@ if (-not $SkipDeploy) {
     $remoteArgs += "--skip-caddy"
   }
 
+  $quotedRemoteArgs = (($remoteArgs | ForEach-Object { "'" + ($_ -replace "'", "'\''") + "'" }) -join " ")
+  $remoteScript = "/tmp/arkons-admin-deploy-$([guid]::NewGuid().ToString('N')).sh"
   $envPrefix = ""
   if ($NonInteractiveSudo) {
     $envPrefix = "ARKONS_ADMIN_SUDO='sudo -n' "
   }
-  $remoteCommand = $envPrefix + "bash -s -- " + (($remoteArgs | ForEach-Object { "'" + ($_ -replace "'", "'\''") + "'" }) -join " ")
-  Write-Host ("> ssh $Server $remoteCommand") -ForegroundColor DarkGray
+  $remoteCommand = "sed -i 's/\r`$//' $remoteScript; ${envPrefix}bash $remoteScript $quotedRemoteArgs; rc=`$?; rm -f $remoteScript; exit `$rc"
+  Write-Host ("> scp $DeployScript $Server`:$remoteScript") -ForegroundColor DarkGray
+  if ($NonInteractiveSudo) {
+    Write-Host ("> ssh $Server $remoteCommand") -ForegroundColor DarkGray
+  } else {
+    Write-Host ("> ssh -tt $Server $remoteCommand") -ForegroundColor DarkGray
+  }
   if (-not $DryRun) {
-    Get-Content -LiteralPath $DeployScript -Raw | & ssh $Server $remoteCommand
+    & scp $DeployScript "$Server`:$remoteScript"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Deploy-Skript konnte nicht auf artserver kopiert werden."
+    }
+
+    if ($NonInteractiveSudo) {
+      & ssh $Server $remoteCommand
+    } else {
+      & ssh -tt $Server $remoteCommand
+    }
     if ($LASTEXITCODE -ne 0) {
       throw "Deploy auf artserver ist fehlgeschlagen."
     }
