@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="${ARKONS_ADMIN_REPO_URL:-git@github.com:BeatArnet/artserver.git}"
+REPO_URL="${ARKONS_ADMIN_REPO_URL:-https://github.com/BeatArnet/artserver.git}"
 BRANCH="${ARKONS_ADMIN_BRANCH:-main}"
 APP_ROOT="${ARKONS_ADMIN_ROOT:-/home/art/arkons/deploy/artserver}"
 SERVICE_NAME="${ARKONS_ADMIN_SERVICE:-arkons-admin-web}"
@@ -12,8 +12,23 @@ LAN_PORT="${ARKONS_ADMIN_LAN_PORT:-18110}"
 LOG_DIR="${ARKONS_ADMIN_WEB_LOG_DIR:-/home/art/arkons/logs/admin/jobs}"
 CADDY_SITE="${ARKONS_ADMIN_CADDY_SITE:-/etc/caddy/sites-enabled/arkons-admin-lan.caddy}"
 SUDO="${ARKONS_ADMIN_SUDO:-sudo}"
+GITHUB_CREDENTIAL_FILE="${ARKONS_ADMIN_GITHUB_CREDENTIAL_FILE:-/home/art/.config/arkons/github.env}"
+GIT_ASKPASS_FILE=""
+GIT_AUTH_USER_EFFECTIVE=""
+GIT_AUTH_TOKEN_EFFECTIVE=""
+TMP_CLONE=""
 SKIP_CADDY=0
 FORCE=0
+
+cleanup() {
+  if [[ -n "${GIT_ASKPASS_FILE}" && -f "${GIT_ASKPASS_FILE}" ]]; then
+    rm -f "${GIT_ASKPASS_FILE}"
+  fi
+  if [[ -n "${TMP_CLONE}" && -d "${TMP_CLONE}" ]]; then
+    rm -rf "${TMP_CLONE}"
+  fi
+}
+trap cleanup EXIT
 
 usage() {
   cat <<'EOF'
@@ -78,12 +93,105 @@ safe_git_name() {
   [[ "$1" =~ ^[A-Za-z0-9._/-]+$ ]]
 }
 
+trim_whitespace() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "${value}"
+}
+
+get_dotenv_value() {
+  local file="$1"
+  local key="$2"
+
+  if [[ ! -f "${file}" ]]; then
+    printf '%s' ""
+    return
+  fi
+
+  local line
+  line="$(grep -m1 -E "^[[:space:]]*${key}[[:space:]]*=" "${file}" || true)"
+  if [[ -z "${line}" ]]; then
+    printf '%s' ""
+    return
+  fi
+
+  local value="${line#*=}"
+  value="$(trim_whitespace "${value}")"
+
+  if [[ "${#value}" -ge 2 ]]; then
+    if [[ "${value:0:1}" == '"' && "${value: -1}" == '"' ]]; then
+      value="${value:1:${#value}-2}"
+    elif [[ "${value:0:1}" == "'" && "${value: -1}" == "'" ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+  fi
+
+  printf '%s' "${value}"
+}
+
+find_first_credential() {
+  local key
+  for key in "$@"; do
+    local value
+    value="$(get_dotenv_value "${GITHUB_CREDENTIAL_FILE}" "${key}")"
+    if [[ -n "${value}" ]]; then
+      printf '%s' "${value}"
+      return
+    fi
+  done
+  printf '%s' ""
+}
+
+setup_git_auth() {
+  GIT_AUTH_USER_EFFECTIVE="${ARKONS_ADMIN_GITHUB_USERNAME:-${GITHUB_USERNAME:-}}"
+  if [[ -z "${GIT_AUTH_USER_EFFECTIVE}" ]]; then
+    GIT_AUTH_USER_EFFECTIVE="$(find_first_credential ARKONS_ADMIN_GITHUB_USERNAME GITHUB_USERNAME GH_USERNAME)"
+  fi
+
+  GIT_AUTH_TOKEN_EFFECTIVE="${ARKONS_ADMIN_GITHUB_TOKEN:-${GITHUB_TOKEN:-${GH_TOKEN:-}}}"
+  if [[ -z "${GIT_AUTH_TOKEN_EFFECTIVE}" ]]; then
+    GIT_AUTH_TOKEN_EFFECTIVE="$(find_first_credential ARKONS_ADMIN_GITHUB_TOKEN GITHUB_TOKEN GH_TOKEN)"
+  fi
+
+  if [[ -n "${GIT_AUTH_USER_EFFECTIVE}" && -n "${GIT_AUTH_TOKEN_EFFECTIVE}" ]]; then
+    GIT_ASKPASS_FILE="$(mktemp /tmp/arkons-admin-git-askpass-XXXXXX.sh)"
+    cat > "${GIT_ASKPASS_FILE}" <<'EOF'
+#!/usr/bin/env bash
+prompt="$1"
+if [[ "${prompt}" == *"Username"* || "${prompt}" == *"username"* ]]; then
+  printf '%s\n' "${GIT_AUTH_USER}"
+  exit 0
+fi
+printf '%s\n' "${GIT_AUTH_TOKEN}"
+EOF
+    chmod 700 "${GIT_ASKPASS_FILE}"
+    log "GitHub: Zugangsdaten gefunden, nutze HTTPS-Login."
+  else
+    log "GitHub: keine Zugangsdaten gefunden, versuche anonymen HTTPS-Zugriff."
+    log "Falls das Repository privat ist: ${GITHUB_CREDENTIAL_FILE} mit GITHUB_USERNAME und GITHUB_TOKEN anlegen."
+  fi
+}
+
+git_with_optional_auth() {
+  if [[ -n "${GIT_ASKPASS_FILE}" ]]; then
+    GIT_ASKPASS="${GIT_ASKPASS_FILE}" \
+      GIT_TERMINAL_PROMPT=0 \
+      GIT_AUTH_USER="${GIT_AUTH_USER_EFFECTIVE}" \
+      GIT_AUTH_TOKEN="${GIT_AUTH_TOKEN_EFFECTIVE}" \
+      git "$@"
+  else
+    GIT_TERMINAL_PROMPT=0 git "$@"
+  fi
+}
+
 need_cmd git
 need_cmd python3
 need_cmd "${SUDO%% *}"
 need_cmd curl
 
 safe_git_name "$BRANCH" || { echo "Unsicherer Branch-Name: $BRANCH" >&2; exit 2; }
+setup_git_auth
 
 log "Git-Checkout aktualisieren"
 if [[ -d "$APP_ROOT/.git" ]]; then
@@ -93,15 +201,20 @@ if [[ -d "$APP_ROOT/.git" ]]; then
     echo "Bitte zuerst pruefen oder mit --force bewusst ueberschreiben." >&2
     exit 4
   fi
-  git fetch origin "$BRANCH"
+  git remote set-url origin "$REPO_URL"
+  git_with_optional_auth fetch origin "$BRANCH"
   if [[ "$FORCE" == "1" ]]; then
     git checkout "$BRANCH"
     git reset --hard "origin/$BRANCH"
   else
     git checkout "$BRANCH"
-    git pull --ff-only origin "$BRANCH"
+    git_with_optional_auth pull --ff-only origin "$BRANCH"
   fi
 else
+  TMP_CLONE="$(mktemp -d /tmp/arkons-admin-git.XXXXXX)"
+  git_with_optional_auth clone --branch "$BRANCH" "$REPO_URL" "$TMP_CLONE"
+  python3 -m py_compile "${TMP_CLONE}/admin-gui/app.py"
+
   if [[ -e "$APP_ROOT" ]]; then
     stamp="$(date +%Y%m%d-%H%M%S)"
     backup="${APP_ROOT}.before-admin-git.${stamp}"
@@ -110,7 +223,8 @@ else
     mv "$APP_ROOT" "$backup"
   fi
   mkdir -p "$(dirname "$APP_ROOT")"
-  git clone --branch "$BRANCH" "$REPO_URL" "$APP_ROOT"
+  mv "$TMP_CLONE" "$APP_ROOT"
+  TMP_CLONE=""
   cd "$APP_ROOT"
 fi
 
