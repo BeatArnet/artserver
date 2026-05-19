@@ -10,7 +10,23 @@
     "recommendedPublicUrl": "https://admin.arkons.ch/",
     "accessPolicy": "Nur LAN oder VPN. Kein öffentlicher Zugriff ohne zusätzliche Absicherung.",
     "localLauncher": "artserver-admin-web.cmd",
-    "notes": "Die Admin-Oberfläche läuft auf artserver. Das lokale CMD kann SSH-Tunnel und Browserstart vorbereiten."
+    "notes": "Die Admin-Oberfläche läuft auf artserver. Das lokale CMD kann SSH-Tunnel und Browserstart vorbereiten.",
+    "overviewTitle": "Administration für artserver",
+    "overviewSummary": "Skripte zum Administrieren von arkons.ch, artserver, Container und Anwendungen. Startbare Aktionen laufen über den Runner, damit im Browser keine freien Shell-Befehle ausgeführt werden.",
+    "overviewFacts": [
+      {
+        "label": "Anwendungen",
+        "value": "3 Container-Apps"
+      },
+      {
+        "label": "Runner",
+        "value": "Skript-ID basiert"
+      },
+      {
+        "label": "Startschutz",
+        "value": "Schutzwort je Risiko"
+      }
+    ]
   },
   "areas": [
     {
@@ -25,7 +41,7 @@
     },
     {
       "id": "website",
-      "label": "Webseite",
+      "label": "www.arkons.ch",
       "kind": "website",
       "navigation": true,
       "repository": "artserver",
@@ -44,7 +60,7 @@
       "scriptIds": [
         "admin.artserver.menu"
       ],
-      "humanNotes": "Die Webseite ist aktuell der Bereich ausserhalb der App-Container. Sie wird als statisches Release gebaut und über Caddy ausgeliefert."
+      "humanNotes": "Die Webseite www.arkons.ch ist bewusst nicht in einem App-Container gespeichert. Sie wird als statisches Release gebaut und über Caddy ausgeliefert."
     },
     {
       "id": "artserver",
@@ -53,8 +69,18 @@
       "navigation": true,
       "summary": "Serverstatus, Caddy, Docker, Speicher, Updates, SSH und zentrale Skripte.",
       "statusChecks": [
-        { "id": "caddy.active", "label": "Caddy aktiv", "type": "systemd", "service": "caddy" },
-        { "id": "docker.active", "label": "Docker aktiv", "type": "systemd", "service": "docker" }
+        {
+          "id": "caddy.active",
+          "label": "Caddy aktiv",
+          "type": "systemd",
+          "service": "caddy"
+        },
+        {
+          "id": "docker.active",
+          "label": "Docker aktiv",
+          "type": "systemd",
+          "service": "docker"
+        }
       ],
       "scriptIds": [
         "admin.artserver.menu"
@@ -68,8 +94,12 @@
       "navigation": true,
       "repository": "Arzttarif_Assistent_dev",
       "github": "https://github.com/BeatArnet/Arzttarif_Assistent_dev",
-      "containerNames": ["Arzttarif"],
-      "internalUrls": ["http://127.0.0.1:18000"],
+      "containerNames": [
+        "Arzttarif"
+      ],
+      "internalUrls": [
+        "http://127.0.0.1:18000"
+      ],
       "healthChecks": [
         {
           "id": "arzttarif.version",
@@ -89,7 +119,8 @@
         "arzttarif.clean.json",
         "arzttarif.update.github"
       ],
-      "humanNotes": "Der Arzttarif-Assistent ist produktiv im Container. Das normale Server-Update soll aus GitHub erfolgen; der lokale Entwicklungsordner-Deploy bleibt für bewusste Sonderfälle."
+      "humanNotes": "Der Arzttarif-Assistent ist produktiv im Container. Das normale Server-Update soll aus GitHub erfolgen; der lokale Entwicklungsordner-Deploy bleibt für bewusste Sonderfälle.",
+      "summary": "Der Arzttarif-Assistent ist produktiv im Container. Das normale Server-Update soll aus GitHub erfolgen; der lokale Entwicklungsordner-Deploy bleibt für bewusste Sonderfälle."
     },
     {
       "id": "menueplan",
@@ -98,8 +129,12 @@
       "navigation": true,
       "repository": "Menueplan",
       "github": "https://github.com/BeatArnet/Menueplan",
-      "containerNames": ["Menueplan"],
-      "internalUrls": ["http://127.0.0.1:18001"],
+      "containerNames": [
+        "Menueplan"
+      ],
+      "internalUrls": [
+        "http://127.0.0.1:18001"
+      ],
       "healthChecks": [
         {
           "id": "menueplan.status",
@@ -120,7 +155,8 @@
         "menueplan.fix.data.permissions",
         "menueplan.common.library"
       ],
-      "humanNotes": "Der Menüplan ist eine häufig genutzte Alltagsanwendung. Updates und Neustarts sollen kurz bleiben und idealerweise mit vorherigem Backup erfolgen."
+      "humanNotes": "Der Menüplan ist eine häufig genutzte Alltagsanwendung. Updates und Neustarts sollen kurz bleiben und idealerweise mit vorherigem Backup erfolgen.",
+      "summary": "Der Menüplan ist eine häufig genutzte Alltagsanwendung. Updates und Neustarts sollen kurz bleiben und idealerweise mit vorherigem Backup erfolgen."
     },
     {
       "id": "robowait",
@@ -173,7 +209,8 @@
         "robowait.local.install.android.vision.host",
         "robowait.participant.export.fallback"
       ],
-      "humanNotes": "RoboWait besteht aus Web, Reverb und Scheduler. Die Admin-Oberfläche muss diese drei Teile getrennt anzeigen."
+      "humanNotes": "RoboWait besteht aus Web, Reverb und Scheduler. Die Admin-Oberfläche muss diese drei Teile getrennt anzeigen.",
+      "summary": "RoboWait besteht aus Web, Reverb und Scheduler. Die Admin-Oberfläche muss diese drei Teile getrennt anzeigen."
     }
   ]
 }

@@ -33,8 +33,10 @@ Später soll diese Anwendung in einen eigenen Container `arkons-admin`.
 
 - Übersicht über Website, artserver, Arzttarif, Menüplan und RoboWait
 - Detailseiten pro Bereich
-- Skripte direkt unter der jeweiligen Anwendung, soweit sie im Katalog zuordenbar sind
+- Skripte als Untermenü direkt unter der jeweiligen Anwendung
+- im Hauptbereich immer nur der aktuell gewählte Menüpunkt mit Hilfetext und Startknopf
 - ausführlicher Hilfetext direkt beim Skript
+- ein gemeinsamer Bearbeiten-Modus pro Seite: `Texte bearbeiten`, danach direkt im sichtbaren Text ändern, dann an derselben Stelle `Speichern` oder `Abbrechen`
 - technische Ausführung einblendbar
 - Runner-Befehl sichtbar
 - Start und Dry-run für freigegebene artserver-Skripte

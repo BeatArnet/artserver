@@ -5,19 +5,20 @@
     {
       "id": "admin.artserver.menu",
       "group": "Projekt-Admin-Einstiege",
-      "label": "artserver zentrale Kommandozentrale",
+      "label": "Dashboard artserver",
       "source": "{ProjectsRoot}\\artserver\\artserver-admin.cmd",
       "location": "Entwicklungsrechner",
       "enabled": true,
       "risk": "niedrig",
       "requiresConfirmation": "",
-      "notes": "Zentrale Startseite für Website, Caddy, Docker, Backups, Checks und die Projekt-Admin-Einstiege.",
       "run": {
         "type": "LocalCommand",
         "path": "{ProjectsRoot}\\artserver\\artserver-admin.cmd",
         "cwd": "{ProjectsRoot}\\artserver",
         "args": []
-      }
+      },
+      "summary": "Zentrale Startseite für Website arkons.ch, Caddy, Docker, Backups, Checks und die Projekt-Admin-Einstiege.",
+      "details": "Kommandozeilenbasiertes Bash-Skript mit gegen 40 unterschiedlichen Skripts zur Verwaltung."
     },
     {
       "id": "admin.robowait.menu",
@@ -182,7 +183,23 @@
       "enabled": true,
       "risk": "mittel",
       "requiresConfirmation": "SYNC",
-      "notes": "Holt produktive Menüplan-Daten auf den Entwicklungsrechner. Vorher prüfen, ob lokale Testdaten überschrieben werden dürfen.",
+      "summary": "Kopiert die produktiven Menüplan-Daten (Rezepte, Menüs, Einstellungen) vom artserver auf den lokalen Entwicklungsrechner.",
+      "details": "Dieser Sync dient dazu, mit einem echten Datenstand zu entwickeln oder Probleme nachzuvollziehen, die nur mit produktiven Daten auftreten. Dabei werden lokale Testdaten im Menüplan-Datenordner vollständig überschrieben. Das ist gewollt, aber muss bewusst akzeptiert werden. Die Verbindung zum artserver erfolgt über SSH.",
+      "whenToUse": "Wenn man lokal mit dem echten Rezept- und Menübestand entwickeln oder testen will. Typisch nach längerer Entwicklungszeit ohne Sync, oder wenn ein gemeldetes Problem nur mit echten Daten reproduzierbar ist.",
+      "beforeStart": [
+        "Prüfen, ob lokale Testdaten noch gebraucht werden – sie werden nach dem Sync überschrieben.",
+        "SSH-Zugang zum artserver muss funktionieren.",
+        "Nicht starten, wenn gerade lokal etwas läuft, das auf den aktuellen Daten basiert."
+      ],
+      "effect": [
+        "Lokaler Menüplan-Datenordner wird mit den Server-Daten überschrieben.",
+        "Auf dem artserver werden keine Änderungen vorgenommen."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Fehler.",
+        "Lokale Daten entsprechen dem Stand der letzten Synchronisierung vom Server."
+      ],
+      "rollback": "Kein direkter Rollback. Wenn lokale Testdaten verloren gingen, müssen sie manuell wiederhergestellt werden. Darum vorher sichern, falls sie wichtig sind.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\Menueplan\\Sync-Data-From-Artserver.ps1",
@@ -199,7 +216,19 @@
       "enabled": true,
       "risk": "niedrig",
       "requiresConfirmation": "",
-      "notes": "Startet die lokale Menüplan-Entwicklungsumgebung.",
+      "summary": "Startet die Menüplan-Anwendung lokal auf dem Entwicklungsrechner für Tests und Weiterentwicklung.",
+      "details": "Die lokale Instanz läuft mit dem lokalen Datenstand und ist nur auf dem Entwicklungsrechner sichtbar. Änderungen am Code können so sofort getestet werden, ohne den produktiven Menüplan auf artserver zu beeinflussen. Die Anwendung läuft auf einem lokalen Port und öffnet sich typischerweise im Browser.",
+      "whenToUse": "Wenn man am Menüplan entwickelt oder Fehler lokal nachvollziehen will, ohne die Produktivumgebung zu riskieren.",
+      "effect": [
+        "Lokaler PHP/Webserver wird gestartet.",
+        "Die Menüplan-Weboberfläche ist lokal im Browser erreichbar.",
+        "Produktive Daten auf artserver werden nicht berührt."
+      ],
+      "successCriteria": [
+        "Browser öffnet die Menüplan-Startseite.",
+        "Login und Rezeptliste sind sichtbar."
+      ],
+      "rollback": "Nicht nötig. Lokale Umgebung kann jederzeit beendet werden.",
       "run": {
         "type": "LocalCommand",
         "path": "{ProjectsRoot}\\Menueplan\\Start_Menüplan.bat",
@@ -251,7 +280,22 @@
       "enabled": true,
       "risk": "mittel",
       "requiresConfirmation": "CERT",
-      "notes": "Exportiert Zertifikatsmaterial. Ausgabe vertraulich behandeln.",
+      "summary": "Exportiert das TLS-Zertifikat des Menüplans aus der laufenden Umgebung auf artserver.",
+      "details": "Der Menüplan kommuniziert verschlüsselt. Das Zertifikat wird gelegentlich für externe Systeme, Debugging oder manuelle Prüfzwecke benötigt. Der Export gibt den Zertifikatsinhalt als Text aus. Diese Ausgabe enthält sicherheitsrelevantes Material und darf nur an autorisierte Stellen weitergegeben werden. Das Zertifikat selbst wird durch diesen Export nicht verändert oder erneuert.",
+      "whenToUse": "Wenn das Zertifikat für ein externes System gebraucht wird, bei Verbindungsproblemen oder zur Überprüfung der Gültigkeit und des Ausstellungszeitraums.",
+      "beforeStart": [
+        "Sicherstellen, dass die Ausgabe nicht in einem Log landet, das unbefugte Personen einsehen können.",
+        "Nur starten, wenn der Verwendungszweck klar ist."
+      ],
+      "effect": [
+        "Das Zertifikat wird gelesen und ausgegeben.",
+        "Es werden keine Änderungen am laufenden System vorgenommen."
+      ],
+      "successCriteria": [
+        "Ausgabe enthält einen vollständigen PEM-Block.",
+        "Gültigkeit und Aussteller sind korrekt."
+      ],
+      "rollback": "Kein Rollback nötig, da nichts verändert wird.",
       "run": {
         "type": "ServerShell",
         "cwd": "/opt/apps/Menueplan",
@@ -268,7 +312,24 @@
       "enabled": true,
       "risk": "mittel",
       "requiresConfirmation": "PERMISSIONS",
-      "notes": "Korrigiert Dateirechte im Menüplan-Datenbereich.",
+      "summary": "Setzt die Datei- und Ordnerrechte im Menüplan-Datenbereich auf den korrekten Stand zurück.",
+      "details": "Wenn Dateien durch manuellen Eingriff, ein fehlgeschlagenes Update oder einen Restore falsche Berechtigungen erhalten haben, kann der laufende Menüplan-Container seine Daten nicht mehr lesen oder schreiben. Das äussert sich typischerweise in Fehlerseiten, fehlenden Rezepten oder einem Menüplan, der sich nicht mehr speichern lässt. Dieser Menüpunkt setzt alle Rechte im Datenverzeichnis mit sudo auf den für den Container erwarteten Wert. Er braucht Root-Rechte, weil Docker-Volumes oft als root angelegt werden.",
+      "whenToUse": "Wenn der Menüplan nach einem Update, Restore oder manuellem Eingriff Fehler beim Datenzugriff zeigt. Auch nach dem ersten Aufsetzen oder nach einem Speicherplatz-Problem sinnvoll.",
+      "beforeStart": [
+        "Kurz prüfen, ob der Fehler tatsächlich auf fehlende Rechte zurückgeführt werden kann (z.B. Fehlermeldung im Menüplan-Log).",
+        "Backup ist empfehlenswert, falls etwas Unerwartetes passiert."
+      ],
+      "effect": [
+        "Datei- und Ordnerrechte unter /opt/apps/Menueplan/data werden angepasst.",
+        "Der Container kann danach wieder auf seine Daten zugreifen.",
+        "Keine Daten werden gelöscht oder überschrieben."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Fehler.",
+        "Menüplan-Weboberfläche zeigt wieder alle Daten korrekt an.",
+        "Speichern und Laden von Rezepten funktioniert."
+      ],
+      "rollback": "Rechte-Änderungen sind kaum rückgängig zu machen. Falls die gewählten Rechte falsch sind, muss das Skript mit den richtigen Parametern erneut ausgeführt werden.",
       "run": {
         "type": "ServerShell",
         "cwd": "/opt/apps/Menueplan",
@@ -437,7 +498,20 @@
       "enabled": true,
       "risk": "niedrig",
       "requiresConfirmation": "",
-      "notes": "Startet die lokale RoboWait-Entwicklungsumgebung.",
+      "summary": "Startet alle für die RoboWait-Entwicklung nötigen lokalen Dienste auf dem Entwicklungsrechner.",
+      "details": "RoboWait besteht aus mehreren Teilen: dem Laravel-Web-Backend, dem Reverb-WebSocket-Server und dem Queue-Scheduler. Das Startskript bringt diese Teile lokal zum Laufen, damit während der Entwicklung alle Funktionen testbar sind – inklusive Echtzeit-Benachrichtigungen und Hintergrundverarbeitung. Die Anwendung läuft nur lokal und hat keinen Einfluss auf die Produktivumgebung auf artserver.",
+      "whenToUse": "Immer wenn man an RoboWait arbeitet und die laufende Anwendung im Browser testen will.",
+      "effect": [
+        "Laravel-Development-Server wird gestartet.",
+        "Reverb WebSocket-Dienst wird gestartet.",
+        "Queue-Worker wird gestartet.",
+        "Nur lokal erreichbar, artserver bleibt unberührt."
+      ],
+      "successCriteria": [
+        "Browser öffnet die lokale RoboWait-Startseite.",
+        "Login und Dashboard funktionieren."
+      ],
+      "rollback": "Nicht nötig. Lokale Prozesse können jederzeit beendet werden.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\start-dev.ps1",
@@ -454,7 +528,22 @@
       "enabled": true,
       "risk": "mittel",
       "requiresConfirmation": "GITSYNC",
-      "notes": "Führt den lokalen RoboWait-Git-Sync aus.",
+      "summary": "Synchronisiert den lokalen RoboWait-Stand mit GitHub – pusht lokale Commits und holt Remote-Änderungen.",
+      "details": "Dieser Sync ist ein bewusster Schritt: Er stellt sicher, dass alle lokalen Änderungen in GitHub landen und der lokale Stand mit dem Remote übereinstimmt. Das Schutzwort verhindert, dass der Sync versehentlich gestartet wird. Wenn mehrere Entwickler am gleichen Code arbeiten oder wenn nach dem Sync ein Server-Update folgen soll, ist dieser Schritt besonders wichtig.",
+      "whenToUse": "Bevor ein Server-Update auf artserver gemacht wird, oder wenn lokale Änderungen gesichert und in GitHub gebracht werden sollen.",
+      "beforeStart": [
+        "Sicherstellen, dass keine ungewollten Änderungen im Working Tree sind.",
+        "Commit-Nachricht und Stand im aktuellen Branch prüfen."
+      ],
+      "effect": [
+        "Lokale Commits werden nach GitHub gepusht.",
+        "Remote-Änderungen werden lokal eingespielt."
+      ],
+      "successCriteria": [
+        "Git meldet erfolgreichen Push und Pull.",
+        "Lokaler und Remote-Stand stimmen überein."
+      ],
+      "rollback": "Git-Commits lassen sich mit git revert oder git reset rückgängig machen. Im Zweifel Git-Log prüfen.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\git-sync.ps1",
@@ -471,7 +560,18 @@
       "enabled": true,
       "risk": "niedrig",
       "requiresConfirmation": "",
-      "notes": "Installiert lokale Git-Hooks im RoboWait-Repository.",
+      "summary": "Installiert automatische Prüfhaken im lokalen Git-Repository, die bei jedem Commit oder Push ausgeführt werden.",
+      "details": "Git-Hooks sind kleine Skripte, die Git automatisch vor oder nach bestimmten Aktionen ausführt – z.B. vor einem Commit oder Push. Sie dienen als Qualitätssicherung und können z.B. Code-Formatierung, Linting oder Tests erzwingen. Einmalig installieren genügt; danach laufen sie automatisch. Dieser Schritt muss nach einem frischen Klon des Repositories erneut ausgeführt werden, weil Git-Hooks nicht im Repository selbst gespeichert werden.",
+      "whenToUse": "Nach einem frischen Git-Klon des RoboWait-Repositories, oder wenn Hooks nach einem Systemwechsel neu eingerichtet werden müssen.",
+      "effect": [
+        "Hook-Skripte werden im lokalen .git/hooks-Verzeichnis installiert.",
+        "Zukünftige Commits und Pushes werden automatisch geprüft."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Fehler.",
+        "Ein Test-Commit löst den Hook aus."
+      ],
+      "rollback": "Git-Hooks können jederzeit aus .git/hooks entfernt werden, falls sie stören.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\install-git-hooks.ps1",
@@ -488,7 +588,19 @@
       "enabled": true,
       "risk": "niedrig",
       "requiresConfirmation": "",
-      "notes": "Rendert Screenshots für RoboWait-Dokumentation.",
+      "summary": "Erstellt automatisch Screenshots der laufenden RoboWait-Anwendung für die Benutzerdokumentation.",
+      "details": "Gute Dokumentation braucht aktuelle Screenshots. Dieses Skript öffnet die RoboWait-Anwendung lokal in einem Browser und erstellt Screenshots der konfigurierten Ansichten. Die Bilder werden direkt in die Dokumentationsordner geschrieben und können danach in Handbüchern oder Anleitungen verwendet werden. Die lokale Entwicklungsumgebung muss laufen.",
+      "whenToUse": "Nach sichtbaren UI-Änderungen, vor der Erstellung neuer Dokumentationsversionen oder wenn Screenshots veraltet sind.",
+      "effect": [
+        "Screenshots werden erzeugt und in den Doku-Ordner geschrieben.",
+        "Vorhandene Screenshots gleichen Namens werden überschrieben.",
+        "Anwendung und Daten werden nicht verändert."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Fehler.",
+        "Neue PNG-Dateien sind im Dokumentationsordner vorhanden."
+      ],
+      "rollback": "Falls Screenshots nicht gebraucht werden, einfach löschen. Git kann ältere Versionen zurückholen.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\render-doc-screenshots.ps1",
@@ -524,7 +636,18 @@
       "enabled": true,
       "risk": "niedrig",
       "requiresConfirmation": "",
-      "notes": "Erzeugt DOCX-Dokumente aus Markdown.",
+      "summary": "Konvertiert die RoboWait-Dokumentation aus Markdown-Dateien in druckfertige DOCX-Dokumente.",
+      "details": "Die Anwendungsdokumentation wird im Markdown-Format gepflegt, weil das in Git gut versionierbar ist. Für externe Empfänger oder den Ausdruck wird ein Word-Dokument (DOCX) benötigt. Dieses Skript erledigt diese Konvertierung automatisch mit pandoc oder einem ähnlichen Werkzeug und erzeugt daraus formatierte DOCX-Dateien.",
+      "whenToUse": "Wenn eine neue Version der Benutzerdokumentation als Word-Dokument abgeliefert oder ausgedruckt werden soll.",
+      "effect": [
+        "DOCX-Dateien werden aus den Markdown-Quellen erzeugt.",
+        "Bestehende DOCX-Dateien gleichen Namens werden überschrieben."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Fehler.",
+        "DOCX-Dateien können in Word geöffnet werden und sehen korrekt aus."
+      ],
+      "rollback": "Nicht nötig. DOCX ist eine Ausgabedatei; die Markdown-Quelle bleibt unverändert.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\export-markdown-docx.ps1",
@@ -596,7 +719,25 @@
       "enabled": true,
       "risk": "hoch",
       "requiresConfirmation": "ESP32",
-      "notes": "Flasht angeschlossene ESP32-Hardware. Nur starten, wenn das richtige Gerät angeschlossen ist.",
+      "summary": "Flasht die RoboWait-Firmware auf einen angeschlossenen ESP32-Mikrocontroller.",
+      "details": "RoboWait verwendet ESP32-Hardware als Warteschlangen-Anzeiger oder Signalgerät an physischen Warteschlangen-Stationen. Das Flashen ersetzt die Firmware auf dem Gerät vollständig mit der aktuellen Version. Der ESP32 muss über USB angeschlossen und der richtige COM-Port bekannt sein. Ein Fehler beim Flash-Vorgang kann das Gerät vorläufig unbenutzbar machen, bis es erneut korrekt geflasht wird. Darum ist das Schutzwort nötig.",
+      "whenToUse": "Wenn eine neue Firmware-Version für die ESP32-Geräte eingespielt werden soll, z.B. nach Hardware-Änderungen, neuen Funktionen oder Bugfixes in der Gerätesoftware.",
+      "beforeStart": [
+        "Sicherstellen, dass das richtige ESP32-Gerät angeschlossen ist und kein anderes Gerät auf dem gleichen Port liegt.",
+        "Anderen laufenden COM-Port-Zugriff (z.B. Serial Monitor) zuerst beenden.",
+        "Firmware-Binärdatei auf Aktualität prüfen."
+      ],
+      "effect": [
+        "Bisherige Firmware auf dem ESP32 wird gelöscht und ersetzt.",
+        "Gerät startet nach dem Flash neu.",
+        "Andere angeschlossene Geräte werden nicht beeinflusst."
+      ],
+      "successCriteria": [
+        "Flash-Vorgang endet ohne Fehler.",
+        "ESP32 startet neu und verbindet sich mit dem WLAN.",
+        "Gerät erscheint als aktiv in der RoboWait-Verwaltung."
+      ],
+      "rollback": "Falls die neue Firmware fehlerhaft ist, kann die alte Firmware erneut aufgespielt werden, sofern die Binärdatei noch vorhanden ist.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\flash-esp32.ps1",
@@ -613,7 +754,22 @@
       "enabled": true,
       "risk": "mittel",
       "requiresConfirmation": "ANDROID",
-      "notes": "Baut den Android Vision Host lokal.",
+      "summary": "Kompiliert die Android-App, die als Kamerabild-Quelle für die RoboWait-Bildverarbeitung dient.",
+      "details": "RoboWait kann über eine Android-Kamera Bilddaten empfangen und daraus Warteschlangen-Informationen ableiten. Der Android Vision Host ist die App auf dem Telefon oder Tablet, die das Kamerabild aufnimmt und an den RoboWait-Server sendet. Dieser Buildschritt kompiliert die App lokal. Das Ergebnis ist eine APK-Datei, die danach auf das Gerät installiert werden kann.",
+      "whenToUse": "Wenn Änderungen an der Android-Vision-App gemacht wurden und eine neue APK-Version erstellt werden soll.",
+      "beforeStart": [
+        "Android Studio oder SDK muss verfügbar sein.",
+        "Abhängigkeiten müssen aktuell sein."
+      ],
+      "effect": [
+        "APK-Datei wird lokal erstellt.",
+        "Geräte werden nicht verändert."
+      ],
+      "successCriteria": [
+        "Build endet ohne Fehler.",
+        "APK-Datei ist vorhanden und hat eine sinnvolle Dateigrösse."
+      ],
+      "rollback": "Nicht nötig. Die APK ist ein lokales Build-Artefakt.",
       "run": {
         "type": "LocalCommand",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\build-android-vision-host.cmd",
@@ -630,7 +786,23 @@
       "enabled": true,
       "risk": "hoch",
       "requiresConfirmation": "ANDROIDINSTALL",
-      "notes": "Installiert auf ein angeschlossenes Android-Gerät. Gerät vorher prüfen.",
+      "summary": "Installiert die Android Vision Host-App auf einem angeschlossenen Gerät via ADB.",
+      "details": "Nachdem die APK gebaut wurde, muss sie auf das Android-Gerät übertragen werden. Dieses Skript erledigt das über ADB (Android Debug Bridge). Das Gerät muss via USB angeschlossen und die ADB-Verbindung erlaubt sein. Die bisherige Version der App auf dem Gerät wird dabei überschrieben. Im schlimmsten Fall muss die App manuell deinstalliert und neu installiert werden.",
+      "whenToUse": "Nachdem die APK erfolgreich gebaut wurde und auf einem konkreten Gerät installiert werden soll.",
+      "beforeStart": [
+        "Richtiges Android-Gerät über USB anschliessen und ADB-Debugging aktivieren.",
+        "Prüfen, ob adb devices das Gerät erkennt.",
+        "APK-Datei aus dem Build-Schritt muss vorhanden sein."
+      ],
+      "effect": [
+        "Bisherige App-Version wird auf dem Gerät überschrieben.",
+        "App startet nach der Installation automatisch oder muss manuell geöffnet werden."
+      ],
+      "successCriteria": [
+        "ADB meldet erfolgreiche Installation.",
+        "App ist auf dem Gerät sichtbar und startbar."
+      ],
+      "rollback": "Falls die neue Version fehlerhaft ist, muss die vorherige APK erneut installiert werden.",
       "run": {
         "type": "LocalCommand",
         "path": "{ProjectsRoot}\\RoboWait\\scripts\\install-android-vision-host.cmd",
@@ -701,7 +873,24 @@
       "enabled": true,
       "risk": "hoch",
       "requiresConfirmation": "ARZTTARIF",
-      "notes": "Kopiert den lokalen Entwicklungsstand nach artserver.",
+      "summary": "Kopiert den lokalen Entwicklungsstand des Arzttarif-Assistenten direkt auf artserver und startet den Docker-Container neu.",
+      "details": "Dieser Deploy-Weg ist ein Sonderfall: Normalerweise soll der Update via GitHub erfolgen. Dieser Menüpunkt wird verwendet, wenn Code schnell und ohne GitHub-Commit getestet werden soll, oder wenn ein Stand existiert, der noch nicht eingecheckt ist. Das ist riskant, weil der eingespielten Code nicht versioniert ist und nicht automatisch reproduziert werden kann. Klar dokumentieren, was und warum deployed wurde.",
+      "whenToUse": "Nur bei bewussten Ausnahmen: z.B. Hotfix ohne Zwischenstopp in GitHub, oder wenn der GitHub-Weg temporär nicht verfügbar ist.",
+      "beforeStart": [
+        "Sicherstellen, dass der lokale Code tatsächlich in den produktiven Betrieb passt.",
+        "Vor dem Deploy ein Backup des aktuellen Server-Standes machen.",
+        "Nach dem Deploy den eingespielten Stand dokumentieren."
+      ],
+      "effect": [
+        "Lokale Dateien werden auf artserver kopiert.",
+        "Docker-Container wird neu gestartet.",
+        "Bisheriger Produktivstand wird überschrieben."
+      ],
+      "successCriteria": [
+        "Container startet ohne Fehler.",
+        "/api/version antwortet mit dem erwarteten Stand."
+      ],
+      "rollback": "Falls der neue Stand fehlerhaft ist, müssen entweder der vorherige GitHub-Stand über arzttarif.update.github eingespielt oder ein Backup manuell wiederhergestellt werden.",
       "run": {
         "type": "AdminFunction",
         "function": "Run-ArzttarifDockerDeploy"
@@ -716,7 +905,23 @@
       "enabled": true,
       "risk": "hoch",
       "requiresConfirmation": "GITMERGE",
-      "notes": "Git-Operation. Vorher Arbeitsstand prüfen.",
+      "summary": "Führt den aktuellen Entwicklungsbranch in den main-Branch zusammen und pusht das Ergebnis nach GitHub.",
+      "details": "Im Arzttarif-Workflow wird in Feature-Branches entwickelt. Wenn eine Funktion fertig und getestet ist, wird sie in main gemergt. Dieser Schritt ist der Ausgangspunkt für den anschliessenden GitHub-Deploy auf artserver. Ein fehlerhafter Merge kann den main-Branch beschädigen und damit das nächste Server-Update fehlschlagen lassen. Darum muss der Merge gut vorbereitet sein.",
+      "whenToUse": "Wenn ein Feature oder Bugfix lokal fertiggestellt und in GitHub bereitgestellt werden soll, um es danach auf artserver zu deployen.",
+      "beforeStart": [
+        "Alle lokalen Tests müssen bestanden sein.",
+        "Sicherstellen, dass keine ungewollten Dateien im Branch sind.",
+        "Den Zielbranch (main) vorher prüfen."
+      ],
+      "effect": [
+        "Lokaler main-Branch wird mit dem Feature-Branch zusammengeführt.",
+        "Merge wird nach GitHub gepusht."
+      ],
+      "successCriteria": [
+        "Git meldet erfolgreichen Merge ohne Konflikte.",
+        "GitHub zeigt den neuen Commit auf main."
+      ],
+      "rollback": "Bei versehentlichem Merge kann git revert oder ein manuelles Reset auf den vorherigen Commit helfen. Im Zweifel Git-Log prüfen.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\git-merge-to-main.ps1",
@@ -733,7 +938,22 @@
       "enabled": true,
       "risk": "hoch",
       "requiresConfirmation": "BRANCHCLEANUP",
-      "notes": "Git-Aufräumaktion. Vorher prüfen, ob keine Branches mehr gebraucht werden.",
+      "summary": "Löscht abgeschlossene und zusammengeführte Git-Branches lokal und auf GitHub.",
+      "details": "Mit der Zeit häufen sich in aktiv entwickelten Repositories viele alte Feature-Branches an, die bereits in main gemertgt wurden. Diese verschmutzen die Branch-Liste und machen die Navigation schwieriger. Dieses Skript identifiziert zusammengeführte Branches und löscht sie. Dabei wird ausschliesslich main selbst geschützt. Löschen ist in Git schwer rückgängig zu machen – darum lohnt es sich, vorher sicher zu sein, dass keine Branches noch gebraucht werden.",
+      "whenToUse": "Nach einer abgeschlossenen Entwicklungsphase, wenn mehrere Feature-Branches erfolgreich in main gemertgt wurden.",
+      "beforeStart": [
+        "Sichergehen, dass alle Branches, die gelöscht werden, wirklich nicht mehr benötigt werden.",
+        "Branches mit laufender Arbeit vorher anders benennen oder schützen."
+      ],
+      "effect": [
+        "Abgeschlossene Branches werden lokal und remote gelöscht.",
+        "main bleibt erhalten."
+      ],
+      "successCriteria": [
+        "Nur noch aktive Branches sind sichtbar.",
+        "GitHub zeigt eine aufgeräumte Branch-Liste."
+      ],
+      "rollback": "Gelöschte Branches können über den Git-Commit-Hash wiederhergestellt werden, solange der Hash noch bekannt ist.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\cleanup-branches-main.ps1",
@@ -750,7 +970,22 @@
       "enabled": true,
       "risk": "hoch",
       "requiresConfirmation": "ARZTTARIFCOPY",
-      "notes": "Kopiert Entwicklungsdateien in eine operative Version. Nur starten, wenn Ziel und Inhalt klar sind.",
+      "summary": "Kopiert ausgewählte Dateien aus dem Entwicklungsordner in den produktiven operativen Arzttarif-Ordner auf dem lokalen Rechner.",
+      "details": "Der Arzttarif-Assistent existiert in zwei lokalen Versionen: dem Entwicklungsordner (dev) und dem operativen Ordner, der für den direkten Einsatz ohne Entwicklungsaufwand gedacht ist. Dieser Kopier-Schritt überträgt den Entwicklungsstand in den operativen Bereich. Das ist ein lokaler Schritt und hat keinen direkten Einfluss auf artserver. Es muss klar sein, welche Dateien kopiert werden und ob der operative Stand danach stabil ist.",
+      "whenToUse": "Wenn eine neue Version des Arzttarif-Assistenten lokal als betriebsfertige Kopie bereitstehen soll, z.B. für Tests ausserhalb der Entwicklungsumgebung.",
+      "beforeStart": [
+        "Prüfen, welche Dateien kopiert werden – der Zielordner muss diese Version vertragen.",
+        "Den operativen Ordner vorher sichern, falls er einen gültigen Stand hat."
+      ],
+      "effect": [
+        "Dateien im operativen Ordner werden überschrieben.",
+        "artserver bleibt unberührt."
+      ],
+      "successCriteria": [
+        "Kopierung endet ohne Fehler.",
+        "Operative Version startet und verhält sich wie erwartet."
+      ],
+      "rollback": "Fallback auf die zuvor gesicherte Version des operativen Ordners.",
       "run": {
         "type": "LocalPowerShell",
         "path": "{ProjectsRoot}\\Arzttarif_Assistent_dev\\scripts\\Dev nach operative Version kopieren.ps1",
@@ -767,7 +1002,22 @@
       "enabled": false,
       "risk": "mittel",
       "requiresConfirmation": "ENCODING",
-      "notes": "Python-Hilfsskript. Parameter und Zielordner zuerst prüfen.",
+      "summary": "Vereinheitlicht die Zeichenkodierung in den Arzttarif-Datendateien auf UTF-8.",
+      "details": "Die Arzttarif-Datenbasis besteht aus JSON-Dateien und anderen strukturierten Textdateien, die aus verschiedenen Quellen stammen. Unterschiedliche Quellen liefern manchmal unterschiedliche Zeichenkodierungen (z.B. Windows-1252 statt UTF-8), was zu Darstellungsfehlern bei Umlauten, Sonderzeichen und medizinischen Bezeichnungen führen kann. Dieses Skript liest die Dateien im angegebenen Zielordner und schreibt sie vereinheitlicht in UTF-8 zurück. Vor dem Start muss klar sein, welcher Ordner verarbeitet wird.",
+      "whenToUse": "Nach dem Import neuer Tarif-Daten aus externen Quellen, wenn Umlaute oder Sonderzeichen in der Anwendung falsch angezeigt werden.",
+      "beforeStart": [
+        "Zielordner und Dateiliste prüfen.",
+        "Sicherungskopie der Rohdaten anlegen, bevor das Skript läuft."
+      ],
+      "effect": [
+        "Dateien werden in UTF-8 umgeschrieben.",
+        "Originaldateien werden überschrieben."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Fehler.",
+        "Umlaute und Sonderzeichen erscheinen in der Anwendung korrekt."
+      ],
+      "rollback": "Sicherungskopie der Quelldateien einspielen.",
       "run": {
         "type": "LocalCommand",
         "path": "python",
@@ -786,7 +1036,22 @@
       "enabled": false,
       "risk": "mittel",
       "requiresConfirmation": "SYNONYMS",
-      "notes": "Python-Hilfsskript. Parameter und Datenziel zuerst prüfen.",
+      "summary": "Bereinigt die Synonymliste des Arzttarif-Assistenten und entfernt veraltete, doppelte oder fehlerhafte Einträge.",
+      "details": "Der Arzttarif-Assistent unterstützt Synonyme, damit Ärzte und Praxismitarbeiter Leistungen auch unter alternativen Bezeichnungen finden können. Mit der Zeit können sich in dieser Synonymliste Duplikate, veraltete Begriffe oder falsch eingetragene Varianten ansammeln. Dieses Skript analysiert die Datei und gibt an, welche Einträge problematisch sind, oder löscht sie direkt. Es muss vorher klar sein, was das Skript tut (nur Analyse oder sofort löschen), und die Datei muss gesichert sein.",
+      "whenToUse": "Wenn die Suche nach Tarifpositionen unbefriedigende Treffer liefert und zu viele ähnliche Einträge existieren, oder nach grösseren Importrunden.",
+      "beforeStart": [
+        "Sicherungskopie der Synonym-Datei anlegen.",
+        "Parameter des Skripts prüfen: löscht es automatisch oder nur analysieren?"
+      ],
+      "effect": [
+        "Synonym-Datei kann direkt verändert werden.",
+        "Gesuchte Treffer des Assistenten können sich danach verändern."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Python-Fehler.",
+        "Synonym-Datei hat danach weniger oder sauberere Einträge."
+      ],
+      "rollback": "Sicherungskopie der Synonym-Datei einspielen.",
       "run": {
         "type": "LocalCommand",
         "path": "python",
@@ -805,7 +1070,22 @@
       "enabled": false,
       "risk": "mittel",
       "requiresConfirmation": "JSON",
-      "notes": "Python-Hilfsskript. Parameter zuerst prüfen.",
+      "summary": "Säubert die JSON-Datenbasis des Arzttarif-Assistenten und behebt strukturelle oder formale Fehler.",
+      "details": "Die Arzttarif-Datenbasis wird in JSON gespeichert und kann über verschiedene Wege befüllt werden: manuelle Bearbeitung, Importe, Skripte. Dabei entstehen gelegentlich fehlerhafte Einträge: leere Felder, falsche Datentypen, nicht-erlaubte Zeichen oder inkonsistente Strukturen. Dieses Skript prüft die JSON-Dateien und bereinigt sie. Die Ausgabe ist eine strukturell saubere Datei, die der Assistent fehlerfrei einlesen kann. Vor dem Start muss klar sein, welche Datei verarbeitet wird, und es muss eine Sicherungskopie existieren.",
+      "whenToUse": "Nach Importen oder manuellen Bearbeitungen, wenn die Anwendung beim Laden der Tarif-Daten Fehler meldet, oder als routinemässige Qualitätssicherung vor einem Produktiv-Update.",
+      "beforeStart": [
+        "Sicherungskopie der JSON-Ausgangsdatei anlegen.",
+        "Skript-Parameter prüfen: welche Datei wird verarbeitet, was wird bereinigt?"
+      ],
+      "effect": [
+        "JSON-Datei wird überschrieben oder neue Datei wird erzeugt.",
+        "Struktur und Format der Daten werden vereinheitlicht."
+      ],
+      "successCriteria": [
+        "Skript endet ohne Python-Fehler.",
+        "Bereinigte JSON-Datei ist gültig und kann fehlerlos eingelesen werden."
+      ],
+      "rollback": "Sicherungskopie der ursprünglichen JSON-Datei einspielen.",
       "run": {
         "type": "LocalCommand",
         "path": "python",
