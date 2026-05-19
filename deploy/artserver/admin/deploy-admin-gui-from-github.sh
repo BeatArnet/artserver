@@ -208,6 +208,11 @@ LAN_IP="192.168.1.136"
 LAN_PORT="18110"
 LOG_DIR="/home/art/arkons/logs/admin/jobs"
 CADDY_SITE="/etc/caddy/sites-enabled/arkons-admin-lan.caddy"
+ALLOWED_PRIVATE_NETS=(
+  "192.168.0.0/16"
+  "10.0.0.0/8"
+  "172.16.0.0/12"
+)
 SKIP_CADDY=0
 
 while [[ $# -gt 0 ]]; do
@@ -346,6 +351,13 @@ CADDY
   caddy validate --config /etc/caddy/Caddyfile
   systemctl reload caddy
   systemctl is-active --quiet caddy
+
+  if command -v ufw >/dev/null 2>&1 && systemctl is-active --quiet ufw; then
+    log "Firewall für LAN/VPN freigeben"
+    for net in "${ALLOWED_PRIVATE_NETS[@]}"; do
+      ufw allow from "$net" to any port "$LAN_PORT" proto tcp comment "Arkons Admin GUI LAN/VPN" >/dev/null
+    done
+  fi
 fi
 
 log "Status"
