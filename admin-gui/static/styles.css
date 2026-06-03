@@ -612,12 +612,47 @@ ul li {
     box-shadow var(--dur) var(--ease),
     border-color var(--dur) var(--ease);
   cursor: default;
+  position: relative;
 }
 
 .summary-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md), 0 0 0 1px var(--line-strong);
   border-color: var(--line-strong);
+}
+
+.summary-card.is-launchable {
+  cursor: pointer;
+}
+
+.summary-card-launch {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.summary-card > :not(.summary-card-launch) {
+  position: relative;
+  z-index: 2;
+}
+
+.summary-card .text-link {
+  margin-right: 14px;
+}
+
+.summary-app-link::after {
+  content: '↗';
+  margin-left: 5px;
+  font-size: 12px;
+}
+
+body.text-editing .summary-card-launch {
+  display: none;
+}
+
+body.text-editing .summary-card.is-launchable {
+  cursor: default;
 }
 
 .summary-head,

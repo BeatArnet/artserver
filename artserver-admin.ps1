@@ -315,7 +315,7 @@ function Write-Title {
   Write-Host "== $Text ==" -ForegroundColor Cyan
 }
 
-function Pause-Menu {
+function Read-MenuPause {
   Write-Host ""
   Read-Host "Enter drücken für das Menü"
 }
@@ -385,13 +385,13 @@ function Invoke-RemoteBashFile {
   }
 }
 
-function Build-Website {
+function Invoke-WebsiteBuild {
   Write-Title "Website bauen"
   Invoke-Checked "python" @("scripts/build.py")
 }
 
 function Start-LocalPreview {
-  Build-Website
+  Invoke-WebsiteBuild
   Write-Title "Lokale Vorschau"
   Write-Host "Öffne $LocalUrl"
   Start-Process $LocalUrl
@@ -399,8 +399,8 @@ function Start-LocalPreview {
   Invoke-Checked "python" @("-m", "http.server", "4173", "--directory", "dist")
 }
 
-function Deploy-ArtserverPreview {
-  Build-Website
+function Publish-ArtserverPreview {
+  Invoke-WebsiteBuild
   Write-Title "Website nach artserver kopieren"
 
   $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -479,17 +479,17 @@ echo "--- docker"
   }
 }
 
-function Run-MenueplanDoctor {
+function Invoke-MenueplanDoctor {
   Write-Title "Menüplan Smoke-Test"
   Invoke-Checked "ssh" @($Server, "cd /home/art/arkons/deploy/artserver/docker && bash smoke-menueplan.sh")
 }
 
-function Run-MenueplanBackup {
+function Invoke-MenueplanBackup {
   Write-Title "Menüplan Backup"
   Invoke-Checked "ssh" @($Server, "cd /opt/apps/Menueplan && bash ops/backup.sh")
 }
 
-function Run-MenueplanDockerUpdate {
+function Invoke-MenueplanDockerUpdate {
   Write-Title "Menüplan Docker-Update aus GitHub"
   if (-not (Test-Path -LiteralPath $MenueplanDeployScript -PathType Leaf)) {
     throw "Menüplan-Deploy-Skript nicht gefunden: $MenueplanDeployScript"
@@ -506,7 +506,7 @@ function Run-MenueplanDockerUpdate {
   }
 }
 
-function Run-ArzttarifDockerDeploy {
+function Invoke-ArzttarifDockerDeploy {
   Write-Title "Arzttarif Docker-Deploy vom Entwicklungsordner"
   if (-not (Test-Path -LiteralPath $ArzttarifDeployScript -PathType Leaf)) {
     throw "Arzttarif-Deploy-Skript nicht gefunden: $ArzttarifDeployScript"
@@ -523,7 +523,7 @@ function Run-ArzttarifDockerDeploy {
   }
 }
 
-function Run-ArzttarifDockerGithubUpdate {
+function Invoke-ArzttarifDockerGithubUpdate {
   Write-Title "Arzttarif Docker-Update aus GitHub"
   Write-Host "Holt den neuesten GitHub-Stand nach /opt/apps/Arzttarif und startet den Arzttarif-Container neu." -ForegroundColor Yellow
   Write-Host "Der Entwicklungsordner auf diesem Windows-Rechner wird dabei nicht verwendet." -ForegroundColor Yellow
@@ -539,7 +539,7 @@ function Run-ArzttarifDockerGithubUpdate {
   )
 }
 
-function Run-RoboWaitDockerPrototype {
+function Invoke-RoboWaitDockerPrototype {
   Write-Title "RoboWait Docker-Prototyp starten"
   Write-Host "Baut und startet RoboWait im Container auf 127.0.0.1:18002/18003. Caddy bleibt unverändert." -ForegroundColor Yellow
   if (-not (Confirm-DangerousAction "Nur starten, wenn ein RoboWait-Containerstart auf artserver jetzt passt." "ROBOWAITDOCKER")) {
@@ -554,7 +554,7 @@ function Run-RoboWaitDockerPrototype {
   )
 }
 
-function Run-RoboWaitDockerSmoke {
+function Invoke-RoboWaitDockerSmoke {
   Write-Title "RoboWait Docker-Smoke-Test"
   Invoke-Checked "ssh" @($Server, "cd /opt/apps/robowait && bash scripts/smoke-docker.sh")
 }
@@ -1069,7 +1069,7 @@ find /etc/caddy -maxdepth 3 -type f \( -name "Caddyfile.bak*" -o -name "Caddyfil
 '@
 }
 
-function Organize-ArtserverScripts {
+function Invoke-ArtserverScriptsOrganization {
   Write-Title "Skripte ordnen"
   Write-Host "Diese Aktion löscht nichts. Klar veraltete Dateien werden in Zeitstempel-Archive verschoben." -ForegroundColor Yellow
   Write-Host "Produktive Skripte für Update, Backup, Restore, Docker, Caddy und App-Betrieb bleiben an ihrem Ort."
@@ -1205,7 +1205,7 @@ function Reset-PortainerAdminPassword {
   Write-Host "Anmelden mit Benutzername admin und dem ausgegebenen Passwort."
 }
 
-function Run-ArtserverUpdate {
+function Invoke-ArtserverUpdate {
   Write-Title "artserver Systemupdate"
   Write-Host "Dieses Skript führt apt full-upgrade aus, startet Dienste neu und kann bei Bedarf nach 10 Sekunden rebooten." -ForegroundColor Yellow
   if (-not (Confirm-DangerousAction "Nur starten, wenn jetzt ein Wartungsfenster passt." "UPDATE")) {
@@ -1383,7 +1383,7 @@ exit 0
 '@
 }
 
-function Run-ArtserverUpdateRebootControl {
+function Invoke-ArtserverUpdateRebootControl {
   Write-Title "Systemupdate, Neustart und Kontrolle"
   Write-Host "Dieser Ablauf macht drei Dinge:" -ForegroundColor Yellow
   Write-Host "1. artserver-Systemupdate starten"
@@ -1414,7 +1414,7 @@ function Run-ArtserverUpdateRebootControl {
   Show-PostRebootControl
 }
 
-function Run-BorgRestoreGuided {
+function Invoke-BorgRestoreGuided {
   Write-Title "Borg Restore Assistent"
   Write-Host "Restore kann Daten überschreiben. Das Server-Skript ist interaktiv und fragt mehrfach nach." -ForegroundColor Yellow
   if (-not (Confirm-DangerousAction "Nur starten, wenn wirklich ein Restore geplant ist." "RESTORE")) {
@@ -1425,12 +1425,12 @@ function Run-BorgRestoreGuided {
   Invoke-Checked "ssh" @("-t", $Server, "sudo bash /home/art/scripts/borg-restore-guided.sh")
 }
 
-function Run-RoboWaitBackup {
+function Invoke-RoboWaitBackup {
   Write-Title "RoboWait Backup"
   Invoke-Checked "ssh" @($Server, "cd /opt/apps/robowait && bash scripts/backup.sh")
 }
 
-function Run-RoboWaitUpdate {
+function Invoke-RoboWaitUpdate {
   Write-Title "RoboWait Update"
   Write-Host "Aktualisiert RoboWait-Code und Abhängigkeiten und startet Dienste neu." -ForegroundColor Yellow
   if (-not (Confirm-DangerousAction "Nur starten, wenn ein RoboWait-Wartungsfenster passt." "ROBOWAIT")) {
@@ -1549,46 +1549,46 @@ function Invoke-MenuChoice {
   param([string]$Choice)
 
   switch ($Choice.Trim()) {
-    "1" { Build-Website; Pause-Menu }
+    "1" { Invoke-WebsiteBuild; Read-MenuPause }
     "2" { Start-LocalPreview }
-    "3" { Deploy-ArtserverPreview; Pause-Menu }
-    "4" { Enable-ArkonsPreview; Pause-Menu }
-    "5" { Show-Status; Pause-Menu }
-    "6" { Open-PreviewBrowser; Pause-Menu }
-    "7" { Open-ArtserverShell; Pause-Menu }
-    "8" { Show-ServiceStatus; Pause-Menu }
-    "9" { Run-MenueplanDoctor; Pause-Menu }
-    "10" { Run-MenueplanBackup; Pause-Menu }
-    "11" { Show-ArtserverScripts; Pause-Menu }
-    "12" { Run-ArtserverUpdate; Pause-Menu }
-    "13" { Run-BorgRestoreGuided; Pause-Menu }
-    "17" { Run-RoboWaitBackup; Pause-Menu }
-    "18" { Run-RoboWaitUpdate; Pause-Menu }
-    "19" { Update-ArtserverHub; Pause-Menu }
-    "20" { Show-ArtserverHub; Pause-Menu }
-    "21" { Show-ServerDocuments; Pause-Menu }
-    "22" { Show-CleanupCandidates; Pause-Menu }
-    "32" { Organize-ArtserverScripts; Pause-Menu }
-    "34" { Show-ScriptCatalog; Pause-Menu }
-    "35" { Start-ScriptFromCatalog; Pause-Menu }
-    "36" { Show-ProjectAdminEntrypoints; Pause-Menu }
-    "23" { Show-DockerStatus; Pause-Menu }
-    "24" { Open-PortainerBrowser; Pause-Menu }
-    "25" { Install-OrUpdatePortainer; Pause-Menu }
-    "26" { Run-ArtserverUpdateRebootControl; Pause-Menu }
-    "27" { Run-MenueplanDockerUpdate; Pause-Menu }
-    "28" { Run-ArzttarifDockerDeploy; Pause-Menu }
-    "29" { Run-RoboWaitDockerPrototype; Pause-Menu }
-    "30" { Run-RoboWaitDockerSmoke; Pause-Menu }
-    "31" { Reset-PortainerAdminPassword; Pause-Menu }
-    "33" { Run-ArzttarifDockerGithubUpdate; Pause-Menu }
-    "h" { Show-Help; Pause-Menu }
-    "H" { Show-Help; Pause-Menu }
-    "?" { Show-Help; Pause-Menu }
+    "3" { Publish-ArtserverPreview; Read-MenuPause }
+    "4" { Enable-ArkonsPreview; Read-MenuPause }
+    "5" { Show-Status; Read-MenuPause }
+    "6" { Open-PreviewBrowser; Read-MenuPause }
+    "7" { Open-ArtserverShell; Read-MenuPause }
+    "8" { Show-ServiceStatus; Read-MenuPause }
+    "9" { Invoke-MenueplanDoctor; Read-MenuPause }
+    "10" { Invoke-MenueplanBackup; Read-MenuPause }
+    "11" { Show-ArtserverScripts; Read-MenuPause }
+    "12" { Invoke-ArtserverUpdate; Read-MenuPause }
+    "13" { Invoke-BorgRestoreGuided; Read-MenuPause }
+    "17" { Invoke-RoboWaitBackup; Read-MenuPause }
+    "18" { Invoke-RoboWaitUpdate; Read-MenuPause }
+    "19" { Update-ArtserverHub; Read-MenuPause }
+    "20" { Show-ArtserverHub; Read-MenuPause }
+    "21" { Show-ServerDocuments; Read-MenuPause }
+    "22" { Show-CleanupCandidates; Read-MenuPause }
+    "32" { Invoke-ArtserverScriptsOrganization; Read-MenuPause }
+    "34" { Show-ScriptCatalog; Read-MenuPause }
+    "35" { Start-ScriptFromCatalog; Read-MenuPause }
+    "36" { Show-ProjectAdminEntrypoints; Read-MenuPause }
+    "23" { Show-DockerStatus; Read-MenuPause }
+    "24" { Open-PortainerBrowser; Read-MenuPause }
+    "25" { Install-OrUpdatePortainer; Read-MenuPause }
+    "26" { Invoke-ArtserverUpdateRebootControl; Read-MenuPause }
+    "27" { Invoke-MenueplanDockerUpdate; Read-MenuPause }
+    "28" { Invoke-ArzttarifDockerDeploy; Read-MenuPause }
+    "29" { Invoke-RoboWaitDockerPrototype; Read-MenuPause }
+    "30" { Invoke-RoboWaitDockerSmoke; Read-MenuPause }
+    "31" { Reset-PortainerAdminPassword; Read-MenuPause }
+    "33" { Invoke-ArzttarifDockerGithubUpdate; Read-MenuPause }
+    "h" { Show-Help; Read-MenuPause }
+    "H" { Show-Help; Read-MenuPause }
+    "?" { Show-Help; Read-MenuPause }
     "0" { return $false }
     default {
       Write-Host "Unbekannte Auswahl: $Choice" -ForegroundColor Yellow
-      Pause-Menu
+      Read-MenuPause
     }
   }
 
@@ -1607,33 +1607,33 @@ if ($Help) {
 
 if ($Run) {
   switch ($Run.Trim()) {
-    "1" { Build-Website }
-    "3" { Deploy-ArtserverPreview }
+    "1" { Invoke-WebsiteBuild }
+    "3" { Publish-ArtserverPreview }
     "5" { Show-Status }
     "6" { Open-PreviewBrowser }
     "8" { Show-ServiceStatus }
-    "9" { Run-MenueplanDoctor }
-    "10" { Run-MenueplanBackup }
+    "9" { Invoke-MenueplanDoctor }
+    "10" { Invoke-MenueplanBackup }
     "11" { Show-ArtserverScripts }
-    "17" { Run-RoboWaitBackup }
-    "18" { Run-RoboWaitUpdate }
+    "17" { Invoke-RoboWaitBackup }
+    "18" { Invoke-RoboWaitUpdate }
     "19" { Update-ArtserverHub }
     "20" { Show-ArtserverHub }
     "21" { Show-ServerDocuments }
     "22" { Show-CleanupCandidates }
-    "32" { Organize-ArtserverScripts }
+    "32" { Invoke-ArtserverScriptsOrganization }
     "34" { Show-ScriptCatalog }
     "35" { Start-ScriptFromCatalog }
     "36" { Show-ProjectAdminEntrypoints }
     "23" { Show-DockerStatus }
     "24" { Open-PortainerBrowser }
-    "26" { Run-ArtserverUpdateRebootControl }
-    "27" { Run-MenueplanDockerUpdate }
-    "28" { Run-ArzttarifDockerDeploy }
-    "29" { Run-RoboWaitDockerPrototype }
-    "30" { Run-RoboWaitDockerSmoke }
+    "26" { Invoke-ArtserverUpdateRebootControl }
+    "27" { Invoke-MenueplanDockerUpdate }
+    "28" { Invoke-ArzttarifDockerDeploy }
+    "29" { Invoke-RoboWaitDockerPrototype }
+    "30" { Invoke-RoboWaitDockerSmoke }
     "31" { Reset-PortainerAdminPassword }
-    "33" { Run-ArzttarifDockerGithubUpdate }
+    "33" { Invoke-ArzttarifDockerGithubUpdate }
     default { throw "Direkt ausführbar sind aktuell die Menüpunkte 1, 3, 5, 6, 8 bis 11, 17 bis 24 und 26 bis 36. Gewünscht war: $Run" }
   }
   exit 0

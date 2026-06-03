@@ -553,6 +553,13 @@ class Renderer:
         cards = []
         for area in areas:
             cards.append(self.area_summary(area, scripts, statuses.get(area.get("id", ""))))
+        fact_items = []
+        for index, fact in enumerate(facts):
+            fact_items.append(
+                f'<div><dt data-edit-source="overview" data-edit-field="factLabel{index}">{esc(fact.get("label", ""))}</dt>'
+                f'<dd data-edit-source="overview" data-edit-field="factValue{index}">{esc(fact.get("value", ""))}</dd></div>'
+            )
+        facts_html = "".join(fact_items)
         body = f"""
 <section class="intro hero-panel">
   <div>
@@ -560,7 +567,7 @@ class Renderer:
     <p data-edit-source="overview" data-edit-field="overviewSummary">{esc(summary)}</p>
   </div>
   <dl class="hero-facts">
-    {''.join(f"<div><dt data-edit-source=\"overview\" data-edit-field=\"factLabel{index}\">{esc(fact.get('label', ''))}</dt><dd data-edit-source=\"overview\" data-edit-field=\"factValue{index}\">{esc(fact.get('value', ''))}</dd></div>" for index, fact in enumerate(facts))}
+    {facts_html}
   </dl>
 </section>
 <section class="overview-grid">
@@ -590,8 +597,19 @@ class Renderer:
         checks = area.get("healthChecks") or area.get("statusChecks") or []
         containers = area.get("containerNames", [])
         status_label, status_class, status_detail, _ = status or area_runtime_status(area)
+        launch_url = self.area_launch_url(area)
+        launch_link = ""
+        launch_class = ""
+        if launch_url:
+            launch_class = " is-launchable"
+            aria_label = f'{area.get("label", area.get("id", ""))} in neuem Fenster öffnen'
+            launch_link = f'<a class="summary-card-launch" href="{esc(launch_url)}" target="_blank" rel="noopener" aria-label="{esc(aria_label)}"></a>'
+        app_link = ""
+        if launch_url:
+            app_link = f'<a class="text-link summary-app-link" href="{esc(launch_url)}" target="_blank" rel="noopener">Anwendung öffnen</a>'
         return f"""
-<article class="summary-card">
+<article class="summary-card{launch_class}">
+  {launch_link}
   <div class="summary-head">
     <h2 data-edit-source="area" data-edit-id="{esc(area.get('id', ''))}" data-edit-field="label">{esc(area.get("label", area.get("id", "")))}</h2>
     <span class="pill {status_class}" title="{esc(status_detail)}">{esc(status_label)}</span>
@@ -604,9 +622,22 @@ class Renderer:
     <div><dt>Checks</dt><dd>{len(checks)}</dd></div>
     <div><dt>Menüpunkte</dt><dd>{len(script_ids)} davon {enabled} freigegeben</dd></div>
   </dl>
+  {app_link}
   <a class="text-link" href="/area/{esc(area.get('id', ''))}">Details öffnen</a>
 </article>
 """
+
+    def area_launch_url(self, area: dict) -> str:
+        for key in ["publicUrl", "lanUrl", "previewUrl", "recommendedPublicUrl"]:
+            if area.get(key):
+                return str(area.get(key))
+        for url in area.get("externalUrls", []):
+            return str(url)
+        for url in area.get("internalUrls", []):
+            text = str(url)
+            if text.startswith(("http://", "https://")):
+                return text
+        return ""
 
     def area_page(self, area_id: str) -> bytes:
         apps, _, scripts = self.data.load()
@@ -744,19 +775,28 @@ class Renderer:
             ("Repository", "repository"),
             ("GitHub", "github"),
             ("Öffentliche URL", "publicUrl"),
+            ("LAN-Adresse", "lanUrl"),
             ("Vorschau", "previewUrl"),
         ]:
             if area.get(key):
                 rows.append((label, area[key]))
         for value in area.get("containerNames", []):
             rows.append(("Container", value))
+        for value in area.get("externalUrls", []):
+            rows.append(("Weitere Adresse", value))
         for value in area.get("internalUrls", []):
             rows.append(("Interne Adresse", value))
         if not rows:
             return ""
         return "<dl class=\"fact-list\">" + "".join(
-            f"<div><dt>{esc(label)}</dt><dd>{esc(value)}</dd></div>" for label, value in rows
+            f"<div><dt>{esc(label)}</dt><dd>{self.fact_value(value)}</dd></div>" for label, value in rows
         ) + "</dl>"
+
+    def fact_value(self, value: object) -> str:
+        text = str(value)
+        if text.startswith(("http://", "https://")):
+            return f'<a href="{esc(text)}" target="_blank" rel="noopener">{esc(text)}</a>'
+        return esc(text)
 
     def checks(self, area: dict) -> str:
         results = area_check_results(area)
@@ -1474,9 +1514,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_html(self.renderer.error_page(f"Skript konnte nicht gestartet werden: {exc}"), status=500)
             return
         except subprocess.TimeoutExpired as exc:
-            stdout = exc.stdout if isinstance(exc.stdout, str) else ""
-            stderr = exc.stderr if isinstance(exc.stderr, str) else ""
-            result = subprocess.CompletedProcess(command, 124, stdout, stderr + "\nZeitlimit erreicht.")
+            stdout_text = exc.stdout if isinstance(exc.stdout, str) else ""
+            stderr_text = exc.stderr if isinstance(exc.stderr, str) else ""
+            result = subprocess.CompletedProcess(command, 124, stdout_text, f"{stderr_text}\nZeitlimit erreicht.")
 
         log_path, log_error = self.write_job_log(script, command, result, dry_run)
         self.send_html(self.renderer.job_result_page(script, command, result, dry_run, log_path, log_error), status=200 if result.returncode == 0 else 500)

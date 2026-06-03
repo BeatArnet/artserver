@@ -16,7 +16,7 @@
     "overviewFacts": [
       {
         "label": "Anwendungen",
-        "value": "3 Container-Apps"
+        "value": "4 Container-Apps"
       },
       {
         "label": "Runner",
@@ -118,6 +118,7 @@
       "navigation": true,
       "repository": "Arzttarif_Assistent_dev",
       "github": "https://github.com/BeatArnet/Arzttarif_Assistent_dev",
+      "publicUrl": "https://arnet.internet-box.ch:4444/",
       "containerNames": [
         "Arzttarif"
       ],
@@ -153,6 +154,7 @@
       "navigation": true,
       "repository": "Menueplan",
       "github": "https://github.com/BeatArnet/Menueplan",
+      "publicUrl": "https://arnet.internet-box.ch:4443/",
       "containerNames": [
         "Menueplan"
       ],
@@ -183,12 +185,44 @@
       "summary": "Der Menüplan ist eine häufig genutzte Alltagsanwendung. Updates und Neustarts sollen kurz bleiben und idealerweise mit vorherigem Backup erfolgen."
     },
     {
+      "id": "immich",
+      "label": "Immich",
+      "kind": "application",
+      "navigation": true,
+      "repository": "Immich",
+      "lanUrl": "http://192.168.1.136:18004/",
+      "externalUrls": [
+        "http://artserver:18004/"
+      ],
+      "containerNames": [
+        "immich_server",
+        "immich_machine_learning",
+        "immich_postgres",
+        "immich_redis"
+      ],
+      "internalUrls": [
+        "http://127.0.0.1:18004"
+      ],
+      "healthChecks": [
+        {
+          "id": "immich.ping",
+          "label": "Immich Server-Ping",
+          "type": "httpJson",
+          "url": "http://127.0.0.1:18004/api/server/ping"
+        }
+      ],
+      "scriptIds": [],
+      "humanNotes": "Immich verwaltet die Bildbibliothek und greift auf die Fotos des NAS zu. Die Admin-Oberfläche prüft den erreichbaren Webdienst; die NAS-Anbindung wird in Immich selbst kontrolliert.",
+      "summary": "Bildverwaltung für die NAS-Fotos mit Statuscheck des Immich-Webdienstes."
+    },
+    {
       "id": "robowait",
       "label": "RoboWait",
       "kind": "application",
       "navigation": true,
       "repository": "RoboWait",
       "github": "https://github.com/BeatArnet/RoboWait",
+      "publicUrl": "https://robowait.arkons.ch/",
       "containerNames": [
         "robowait-docker-web",
         "robowait-docker-reverb",
