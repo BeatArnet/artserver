@@ -10,6 +10,7 @@ import re
 import shutil
 import shlex
 import socket
+import ssl
 import subprocess
 import urllib.error
 import urllib.request
@@ -247,8 +248,9 @@ def run_http_check(check: dict, timeout: float = CHECK_TIMEOUT_SECONDS) -> tuple
     request = urllib.request.Request(url, method=method)
     if check.get("hostHeader"):
         request.add_header("Host", str(check.get("hostHeader")))
+    context = ssl._create_unverified_context() if check.get("insecureTls") is True else None
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with urllib.request.urlopen(request, timeout=timeout, context=context) as response:
             if 200 <= response.status < 400:
                 return "ok", f"HTTP {response.status}"
             return "failed", f"HTTP {response.status}"

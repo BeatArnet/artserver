@@ -16,7 +16,7 @@
     "overviewFacts": [
       {
         "label": "Anwendungen",
-        "value": "4 Container-Apps"
+        "value": "5 Container-Apps"
       },
       {
         "label": "Runner",
@@ -214,6 +214,37 @@
       "scriptIds": [],
       "humanNotes": "Immich verwaltet die Bildbibliothek und greift auf die Fotos des NAS zu. Die Admin-Oberfläche prüft den erreichbaren Webdienst; die NAS-Anbindung wird in Immich selbst kontrolliert.",
       "summary": "Bildverwaltung für die NAS-Fotos mit Statuscheck des Immich-Webdienstes."
+    },
+    {
+      "id": "portainer",
+      "label": "Portainer",
+      "kind": "application",
+      "navigation": true,
+      "repository": "Portainer CE",
+      "lanUrl": "https://192.168.1.136:9443/",
+      "containerNames": [
+        "portainer"
+      ],
+      "internalUrls": [
+        "https://127.0.0.1:9443"
+      ],
+      "healthChecks": [
+        {
+          "id": "portainer.web",
+          "label": "Portainer Web",
+          "type": "httpHead",
+          "url": "https://127.0.0.1:9443/",
+          "insecureTls": true
+        }
+      ],
+      "scriptIds": [
+        "legacy.docker.status",
+        "legacy.portainer.open",
+        "legacy.portainer.install",
+        "legacy.portainer.reset.password"
+      ],
+      "humanNotes": "Portainer ist die Docker-Weboberfläche auf artserver. Es bekommt Zugriff auf den Docker-Socket und soll deshalb nur bewusst und im LAN/VPN genutzt werden.",
+      "summary": "Docker-Weboberfläche für Container, Images, Volumes und Stacks auf artserver."
     },
     {
       "id": "robowait",
