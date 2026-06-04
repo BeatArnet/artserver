@@ -8,6 +8,7 @@ Dieses Repository sammelt die lokalen Hilfsdateien und Notizen für die Installa
 - Die öffentliche Domain `arkons.ch` bleibt vorerst noch bei Localsearch.
 - Auf `artserver` ist eine interne Vorschau aktiv:
   - `http://192.168.1.136/`
+  - `http://192.168.1.136:18005/`
   - `http://192.168.1.136/produkte/`
   - `http://192.168.1.136/robowait/`
   - `http://192.168.1.136/menueplaner/`
@@ -121,6 +122,7 @@ http://127.0.0.1:18005/
 
 ```text
 http://192.168.1.136/
+http://192.168.1.136:18005/
 ```
 
 7. Menuepunkt `5` ausführen, um Arkons-Vorschau und bestehende Apps zu prüfen.

@@ -30,6 +30,7 @@ cat > "$CADDY_SITE" <<'CADDY'
 # arkons-managed: static website preview before DNS cutover.
 # Safe preview URLs:
 # - http://artserver:8088/
+# - http://artserver:18005/
 # - http://192.168.1.136/
 # - http://arkons.ch/ with a local hosts/DNS override to artserver
 #
@@ -37,6 +38,12 @@ cat > "$CADDY_SITE" <<'CADDY'
 # public DNS still points to Localsearch and ACME validation would fail.
 
 :8088 {
+	encode zstd gzip
+	root * /home/art/arkons/www/current
+	file_server
+}
+
+:18005 {
 	encode zstd gzip
 	root * /home/art/arkons/www/current
 	file_server
@@ -61,3 +68,4 @@ systemctl is-active --quiet caddy
 
 echo "Arkons preview enabled."
 echo "Preview: http://artserver:8088/"
+echo "Preview: http://artserver:18005/"
