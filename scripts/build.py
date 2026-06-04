@@ -227,6 +227,7 @@ def main() -> None:
             "{{ title }}": html.escape(title),
             "{{ description }}": html.escape(meta["description"]),
             "{{ siteName }}": html.escape(site["siteName"]),
+            "{{ footerName }}": html.escape(site.get("footerName", site["siteName"])),
             "{{ address }}": html.escape(site["address"]),
             "{{ nav }}": render_links(cast(list[NavItem], site["nav"]), current, True),
             "{{ footerLinks }}": render_links(

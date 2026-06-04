@@ -12,13 +12,21 @@ import shlex
 import socket
 import ssl
 import subprocess
+import sys
+import tomllib
 import urllib.error
 import urllib.request
+import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import IO, Any, cast
 from urllib.parse import parse_qs, quote, unquote, urlparse
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    import cgi
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +34,11 @@ DEFAULT_APPS = ROOT / "artserver-apps.json"
 DEFAULT_CATALOG = ROOT / "artserver-script-catalog.json"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 CHECK_TIMEOUT_SECONDS = 0.7
+SITE_JSON = ROOT / "content" / "site.json"
+SITE_TEXTS = ROOT / "content" / "textbausteine.toml"
+SITE_PAGES = ROOT / "content" / "pages"
+SITE_IMAGES = ROOT / "assets" / "img"
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".ico"}
 
 
 def first_existing_path(candidates: list[Path]) -> Path:
@@ -58,6 +71,92 @@ def read_json(path: Path) -> dict:
 
 def esc(value: object) -> str:
     return html.escape("" if value is None else str(value), quote=True)
+
+
+def parse_site_page(path: Path) -> tuple[dict[str, str], str]:
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        raise ValueError(f"{path} hat keinen Front-Matter-Block.")
+    _, front, body = text.split("---\n", 2)
+    meta: dict[str, str] = {}
+    for line in front.splitlines():
+        if not line.strip():
+            continue
+        key, value = line.split(":", 1)
+        meta[key.strip()] = value.strip().strip('"')
+    return meta, body.strip()
+
+
+def write_site_page(path: Path, meta: dict[str, str], body: str) -> None:
+    lines = ["---"]
+    for key in ("title", "description", "path"):
+        lines.append(f"{key}: {meta.get(key, '').strip()}")
+    lines.extend(["---", body.strip(), ""])
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def textbaustein_rows(value: object, prefix: str = "") -> list[tuple[str, object]]:
+    rows: list[tuple[str, object]] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            path = f"{prefix}.{key}" if prefix else str(key)
+            rows.extend(textbaustein_rows(child, path))
+    elif isinstance(value, str):
+        rows.append((prefix, value))
+    elif isinstance(value, list) and all(isinstance(item, str) for item in value):
+        rows.append((prefix, value))
+    return rows
+
+
+def set_nested_value(data: dict, path: str, value: object) -> None:
+    current = data
+    parts = path.split(".")
+    for part in parts[:-1]:
+        current = current.setdefault(part, {})
+    current[parts[-1]] = value
+
+
+def toml_quote(value: object) -> str:
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def toml_scalar_block(data: dict, prefix: str = "") -> list[str]:
+    lines: list[str] = []
+    for key, value in data.items():
+        if isinstance(value, str):
+            lines.append(f"{key} = {toml_quote(value)}")
+        elif isinstance(value, list) and all(isinstance(item, str) for item in value):
+            lines.append(f"{key} = [")
+            for item in value:
+                lines.append(f"  {toml_quote(item)},")
+            lines.append("]")
+    return lines
+
+
+def toml_tables(data: dict, prefix: str = "") -> list[str]:
+    lines: list[str] = []
+    for key, value in data.items():
+        if not isinstance(value, dict):
+            continue
+        path = f"{prefix}.{key}" if prefix else str(key)
+        if any(not isinstance(child, dict) and not isinstance(child, list) for child in value.values()):
+            lines.append("")
+            lines.append(f"[{path}]")
+            lines.extend(toml_scalar_block(value, path))
+        for child_key, child in value.items():
+            if isinstance(child, list) and child and all(isinstance(item, dict) for item in child):
+                for item in child:
+                    lines.append("")
+                    lines.append(f"[[{path}.{child_key}]]")
+                    lines.extend(toml_scalar_block(item))
+        lines.extend(toml_tables({k: v for k, v in value.items() if isinstance(v, dict)}, path))
+    return lines
+
+
+def write_textbausteine(data: dict) -> None:
+    lines = toml_scalar_block(data)
+    lines.extend(toml_tables(data))
+    SITE_TEXTS.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
 
 
 def risk_class(risk: str) -> str:
@@ -454,6 +553,8 @@ class Renderer:
             items.append('</div>')
 
         selected = " active" if active == "jobs" and not active_script_id else ""
+        selected_website = " active" if active == "website-editor" and not active_script_id else ""
+        items.append(f'<a class="nav-item{selected_website}" href="/website">Website bearbeiten</a>')
         items.append(f'<a class="nav-item{selected}" href="/jobs">Jobs und Logs</a>')
         return '<nav class="nav">' + "\n".join(items) + "</nav>"
 
@@ -1096,6 +1197,142 @@ class Renderer:
 """
         return self.page("Jobs und Logs", "jobs", body)
 
+    def website_page(self, notice: str = "") -> bytes:
+        site = read_json(SITE_JSON)
+        pages = []
+        for page_file in sorted(SITE_PAGES.glob("*.html")):
+            if page_file.name.startswith("_"):
+                continue
+            try:
+                meta, body = parse_site_page(page_file)
+            except ValueError:
+                continue
+            page_id = page_file.stem
+            pages.append((page_file, page_id, meta, body))
+
+        with SITE_TEXTS.open("rb") as handle:
+            texts = tomllib.load(handle)
+        text_rows = textbaustein_rows(texts)
+
+        images = [
+            path for path in sorted(SITE_IMAGES.rglob("*"))
+            if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+        ]
+
+        site_form = f"""
+<form class="edit-form website-form" method="post" action="/website/save-site">
+  <div class="website-grid">
+    {self.field_input("siteName", "Name im Header", site.get("siteName", ""))}
+    {self.field_input("footerName", "Name im Footer", site.get("footerName", site.get("siteName", "")))}
+    {self.field_input("baseUrl", "Basis-URL", site.get("baseUrl", ""))}
+    {self.field_input("address", "Adresse", site.get("address", ""))}
+  </div>
+  <div class="edit-actions"><button type="submit">Website-Daten speichern und bauen</button></div>
+</form>
+"""
+
+        page_cards = []
+        for page_file, page_id, meta, body in pages:
+            page_cards.append(f"""
+<details class="website-editor">
+  <summary>
+    <span>{esc(meta.get("title", page_id))}</span>
+    <small>{esc(meta.get("path", ""))} · {esc(page_file.name)}</small>
+  </summary>
+  <form class="edit-form website-form" method="post" action="/website/save-page/{esc(page_id)}">
+    {self.field_input("title", "Seitentitel", meta.get("title", ""))}
+    {self.field_textarea("description", "Beschreibung für Suchmaschinen", meta.get("description", ""), rows=2)}
+    {self.field_input("path", "Webpfad", meta.get("path", ""))}
+    {self.field_textarea("body", "Seiteninhalt HTML", body, rows=14, hint="Für Struktur, Abschnitte, Buttons und Bildpfade.")}
+    <div class="edit-actions"><button type="submit">Seite speichern und bauen</button></div>
+  </form>
+</details>
+""")
+
+        text_fields = []
+        for key, value in text_rows:
+            rows = 5 if isinstance(value, list) else 3
+            text_value = "\n".join(value) if isinstance(value, list) else str(value)
+            text_fields.append(f"""
+<div class="edit-field">
+  <label>
+    <span class="edit-label">{esc(key)}</span>
+    <span class="edit-hint">{'Eine Zeile pro Eintrag.' if isinstance(value, list) else 'Textbaustein'}</span>
+  </label>
+  <textarea name="text_{esc(key)}" rows="{rows}" spellcheck="true">{esc(text_value)}</textarea>
+</div>
+""")
+
+        image_items = []
+        for image in images:
+            rel = image.relative_to(SITE_IMAGES).as_posix()
+            web_path = f"/assets/img/{rel}"
+            image_items.append(f"""
+<article class="image-admin-item">
+  <img src="{esc(web_path)}" alt="">
+  <div>
+    <strong>{esc(rel)}</strong>
+    <code>{esc(web_path)}</code>
+  </div>
+  <form method="post" action="/website/upload-image" enctype="multipart/form-data">
+    <input type="hidden" name="target" value="{esc(rel)}">
+    <input type="file" name="image" accept="image/*">
+    <button type="submit" class="secondary">Ersetzen</button>
+  </form>
+</article>
+""")
+
+        body = f"""
+<section class="panel section-lead">
+  <h2>Website bearbeiten</h2>
+  <p>Diese Oberfläche schreibt in <code>content/</code> und <code>assets/img/</code>. Nach jedem Speichern wird <code>dist/</code> neu gebaut.</p>
+</section>
+<section class="panel">
+  <div class="section-title-row">
+    <h2>Globale Angaben</h2>
+    <span class="pill">content/site.json</span>
+  </div>
+  {site_form}
+</section>
+<section class="panel">
+  <div class="section-title-row">
+    <h2>Seiten</h2>
+    <span class="pill">{len(page_cards)} Dateien</span>
+  </div>
+  <div class="website-stack">{''.join(page_cards)}</div>
+</section>
+<section class="panel">
+  <div class="section-title-row">
+    <h2>Textbausteine</h2>
+    <span class="pill">content/textbausteine.toml</span>
+  </div>
+  <form class="edit-form website-form" method="post" action="/website/save-texts">
+    <div class="website-text-grid">{''.join(text_fields)}</div>
+    <div class="edit-actions"><button type="submit">Textbausteine speichern und bauen</button></div>
+  </form>
+</section>
+<section class="panel">
+  <div class="section-title-row">
+    <h2>Bilder</h2>
+    <span class="pill">{len(image_items)} Dateien</span>
+  </div>
+  <form class="edit-form upload-new-image" method="post" action="/website/upload-image" enctype="multipart/form-data">
+    <input type="hidden" name="target" value="">
+    <label>
+      Neues Bild hinzufügen
+      <input type="file" name="image" accept="image/*">
+    </label>
+    <label>
+      Dateiname im Ordner assets/img
+      <input name="filename" placeholder="beispiel.webp">
+    </label>
+    <button type="submit">Hochladen</button>
+  </form>
+  <div class="image-admin-grid">{''.join(image_items)}</div>
+</section>
+"""
+        return self.page("Website bearbeiten", "website-editor", body, notice=notice)
+
     def job_log_page(self, filename: str) -> bytes:
         safe_name = Path(filename).name
         if safe_name != filename or not safe_name.endswith(".log"):
@@ -1323,11 +1560,94 @@ class CatalogEditor:
         self.catalog_path.write_text(text, encoding="utf-8")
 
 
+class WebsiteEditor:
+    def __init__(self, root: Path):
+        self.root = root
+
+    def rebuild(self) -> str:
+        result = subprocess.run(
+            [sys.executable, str(self.root / "scripts" / "build.py")],
+            cwd=str(self.root),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise RuntimeError((result.stderr or result.stdout or "Build fehlgeschlagen.").strip())
+        return result.stdout.strip()
+
+    def save_site(self, form: dict[str, list[str]]) -> str:
+        site = read_json(SITE_JSON)
+        for field in ("siteName", "footerName", "baseUrl", "address"):
+            if field in form:
+                site[field] = (form.get(field) or [""])[0].strip()
+        SITE_JSON.write_text(json.dumps(site, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        self.rebuild()
+        return "Website-Daten gespeichert und dist neu gebaut."
+
+    def save_page(self, page_id: str, form: dict[str, list[str]]) -> str:
+        page_file = SITE_PAGES / f"{Path(page_id).stem}.html"
+        if not page_file.exists() or page_file.name.startswith("_"):
+            raise ValueError("Seite nicht gefunden.")
+        meta, _ = parse_site_page(page_file)
+        for field in ("title", "description", "path"):
+            meta[field] = (form.get(field) or [meta.get(field, "")])[0].strip()
+        body = (form.get("body") or [""])[0]
+        write_site_page(page_file, meta, body)
+        self.rebuild()
+        return f"Seite {page_file.name} gespeichert und dist neu gebaut."
+
+    def save_texts(self, form: dict[str, list[str]]) -> str:
+        with SITE_TEXTS.open("rb") as handle:
+            data = tomllib.load(handle)
+        for key, values in form.items():
+            if not key.startswith("text_"):
+                continue
+            path = key.removeprefix("text_")
+            raw = values[0] if values else ""
+            current = data
+            for part in path.split("."):
+                current = current[part]
+            if isinstance(current, list):
+                set_nested_value(data, path, [line.strip() for line in raw.splitlines() if line.strip()])
+            else:
+                set_nested_value(data, path, raw.strip())
+        write_textbausteine(data)
+        self.rebuild()
+        return "Textbausteine gespeichert und dist neu gebaut."
+
+    def save_image_upload(self, fields: cgi.FieldStorage) -> str:
+        target_field = fields["target"] if "target" in fields else None
+        filename_field = fields["filename"] if "filename" in fields else None
+        upload = fields["image"] if "image" in fields else None
+        if upload is None or not getattr(upload, "filename", ""):
+            raise ValueError("Keine Bilddatei ausgewählt.")
+
+        requested_target = str(target_field.value if target_field is not None else "").strip()
+        requested_filename = str(filename_field.value if filename_field is not None else "").strip()
+        relative_name = requested_target or requested_filename or Path(upload.filename).name
+        relative_name = relative_name.replace("\\", "/").strip("/")
+        if not relative_name:
+            raise ValueError("Dateiname fehlt.")
+        target = (SITE_IMAGES / relative_name).resolve()
+        if SITE_IMAGES.resolve() not in target.parents:
+            raise ValueError("Ungültiger Bildpfad.")
+        if target.suffix.lower() not in IMAGE_EXTENSIONS:
+            raise ValueError("Dieser Dateityp ist nicht als Bild freigegeben.")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("wb") as handle:
+            shutil.copyfileobj(upload.file, handle)
+        self.rebuild()
+        return f"Bild {target.relative_to(SITE_IMAGES).as_posix()} gespeichert und dist neu gebaut."
+
+
 class Handler(BaseHTTPRequestHandler):
     renderer: Renderer
     data: AdminData
     apps_editor: AppsEditor
     catalog_editor: CatalogEditor
+    website_editor: WebsiteEditor
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -1349,6 +1669,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/jobs":
             self.send_html(self.renderer.jobs_page())
             return
+        if path == "/website":
+            self.send_html(self.renderer.website_page())
+            return
         if path.startswith("/job-log/"):
             self.send_html(self.renderer.job_log_page(path.removeprefix("/job-log/")))
             return
@@ -1367,6 +1690,25 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
         length = int(self.headers.get("Content-Length", "0") or "0")
+        content_type = self.headers.get("Content-Type", "")
+
+        if path == "/website/upload-image":
+            try:
+                fields = cgi.FieldStorage(
+                    fp=cast(IO[Any], self.rfile),
+                    headers=self.headers,
+                    environ={
+                        "REQUEST_METHOD": "POST",
+                        "CONTENT_TYPE": content_type,
+                        "CONTENT_LENGTH": str(length),
+                    },
+                )
+                notice = self.website_editor.save_image_upload(fields)
+                self.send_html(self.renderer.website_page(notice=notice))
+            except Exception as exc:
+                self.send_html(self.renderer.website_page(notice=f"Fehler beim Speichern: {exc}"), status=500)
+            return
+
         raw_body = self.rfile.read(length).decode("utf-8")
 
         if path == "/save-inline-texts":
@@ -1400,6 +1742,31 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         form = parse_qs(raw_body)
+
+        if path == "/website/save-site":
+            try:
+                notice = self.website_editor.save_site(form)
+                self.send_html(self.renderer.website_page(notice=notice))
+            except Exception as exc:
+                self.send_html(self.renderer.website_page(notice=f"Fehler beim Speichern: {exc}"), status=500)
+            return
+
+        if path == "/website/save-texts":
+            try:
+                notice = self.website_editor.save_texts(form)
+                self.send_html(self.renderer.website_page(notice=notice))
+            except Exception as exc:
+                self.send_html(self.renderer.website_page(notice=f"Fehler beim Speichern: {exc}"), status=500)
+            return
+
+        if path.startswith("/website/save-page/"):
+            page_id = path.removeprefix("/website/save-page/")
+            try:
+                notice = self.website_editor.save_page(page_id, form)
+                self.send_html(self.renderer.website_page(notice=notice))
+            except Exception as exc:
+                self.send_html(self.renderer.website_page(notice=f"Fehler beim Speichern: {exc}"), status=500)
+            return
 
         if path.startswith("/save/"):
             script_id = path.removeprefix("/save/")
@@ -1605,6 +1972,7 @@ def main() -> None:
     Handler.renderer = Renderer(data)
     Handler.apps_editor = AppsEditor(args.apps)
     Handler.catalog_editor = CatalogEditor(args.catalog)
+    Handler.website_editor = WebsiteEditor(ROOT)
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Arkons Admin Web-GUI läuft auf http://{args.host}:{args.port}/")
     server.serve_forever()

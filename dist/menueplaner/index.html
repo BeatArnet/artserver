@@ -1,21 +1,18 @@
 <!doctype html>
 <html lang="de">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Menüplaner | arkons.ch</title>
-  <meta name="description"
-    content="Der private Menüplaner organisiert Wochenmenüs, Rezeptbibliothek, intelligente Vorschläge, Kalenderhinweise, Einkaufsliste, Importfunktionen und Druckausgabe.">
+  <meta name="description" content="Der private Menüplaner organisiert Wochenmenüs, Rezeptbibliothek, intelligente Vorschläge, Kalenderhinweise, Einkaufsliste, Importfunktionen und Druckausgabe.">
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/styles.css">
 </head>
-
 <body>
   <header class="site-header">
     <div class="header-inner">
       <a class="brand" href="/">
-        <img src="/assets/img/arkons-logo.png" alt="arkons.ch Logo">
+        <img src="/assets/img/arkons-logo.svg" alt="arkons.ch Logo">
         <span>arkons.ch</span>
       </a>
       <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Navigation anzeigen">
@@ -25,33 +22,27 @@
       </label>
       <nav class="site-nav" aria-label="Hauptnavigation">
         <a href="/">STARTSEITE</a>
-        <div class="nav-item has-menu"><a href="/produkte/" aria-current="page">Produkte</a>
-          <div class="submenu">
+        <div class="nav-item has-menu"><a href="/produkte/" aria-current="page">Produkte</a><div class="submenu">
             <a href="/arzttarif-assistent/">Arzttarif-Assistent</a>
             <a href="/Tarifvergleich/">Simulation: von Tarmed zu TARDOC/Pauschalen</a>
             <a href="/Quiz_NeuerArzttarif/">Spiel und Quiz Neuer Arzttarif</a>
             <a href="/robowait/">RoboWait</a>
             <a href="/menueplaner/">Menüplaner</a>
-          </div>
-        </div>
+          </div></div>
         <a href="/uber-uns/">ÜBER UNS</a>
         <a href="/kontakt/">KONTAKT</a>
       </nav>
     </div>
   </header>
 
-  <main class="product-page menueplan-page">
-    <section class="product-hero product-hero-light"
-      style="--hero-image: url('/assets/img/products/menueplan-dashboard.png')">
+<main class="product-page menueplan-page">
+    <section class="product-hero product-hero-light" style="--hero-image: url('/assets/img/products/menueplan-dashboard.png')">
       <div class="hero-inner">
         <div class="product-hero-copy">
           <p class="product-badge">Private PWA</p>
           <h1>Menüplaner</h1>
-          <p class="lead">Wochenmenüs, Rezepte, Einkauf, Kalender und Druck in einer App, die für den echten
-            Küchenalltag gebaut ist.</p>
-          <p>Der Menüplaner ersetzt die frühere Excel-Planung durch eine reaktive Web-App. Er hilft beim schnellen
-            Befüllen einer Woche, beim Wiederfinden bewährter Rezepte, beim Vermeiden von Wiederholungen, beim Einbezug
-            von Kalenderterminen und beim Erstellen einer Einkaufsliste.</p>
+          <p class="lead">Wochenmenüs, Rezepte, Einkauf, Kalender und Druck in einer App, die für den echten Küchenalltag gebaut ist.</p>
+          <p>Der Menüplaner ersetzt die frühere Excel-Planung durch eine reaktive Web-App. Er hilft beim schnellen Befüllen einer Woche, beim Wiederfinden bewährter Rezepte, beim Vermeiden von Wiederholungen, beim Einbezug von Kalenderterminen und beim Erstellen einer Einkaufsliste.</p>
           <div class="actions">
             <a class="button primary" href="https://arnet.internet-box.ch:4443/">Anwendung öffnen</a>
             <a class="button" href="https://github.com/BeatArnet/Menueplan">GitHub-Dokumentation</a>
@@ -66,12 +57,8 @@
         <div>
           <p class="eyebrow">Alltagstauglich</p>
           <h2>Planen, kochen, einkaufen - ohne Tabellenpflege</h2>
-          <p>Die Startansicht zeigt eine 8-Tage-Planung mit Vorschau auf die Folgewoche. Änderungen werden automatisch
-            gespeichert, lassen sich rückgängig machen und können bei Bedarf durch eine Wochensperre geschützt werden.
-          </p>
-          <p>Rezepte können aus der Bibliothek übernommen, per Drag and Drop auf Tage gezogen oder als intelligente
-            Vorschläge eingesetzt werden. Beilagen, Gemüse, Salat, Vorspeise und Dessert bleiben als eigene
-            Informationen erhalten.</p>
+          <p>Die Startansicht zeigt eine 8-Tage-Planung mit Vorschau auf die Folgewoche. Änderungen werden automatisch gespeichert, lassen sich rückgängig machen und können bei Bedarf durch eine Wochensperre geschützt werden.</p>
+          <p>Rezepte können aus der Bibliothek übernommen, per Drag and Drop auf Tage gezogen oder als intelligente Vorschläge eingesetzt werden. Beilagen, Gemüse, Salat, Vorspeise und Dessert bleiben als eigene Informationen erhalten.</p>
           <ul class="plain-list">
             <li>Wochenwechsel ohne Speicherdialog dank Auto-Speichern</li>
             <li>Tageskarten mit Hauptgang, Beilage, Gemüse, Salat, Vorspeise und Dessert</li>
@@ -91,48 +78,43 @@
       <div class="section-inner">
         <p class="eyebrow">Ablauf</p>
         <h2>Vom Wochenplan zur Einkaufsliste</h2>
-        <ol class="process-steps">
-          <li>
-            <span class="step-label">01</span>
-            <div>
-              <h3>Woche öffnen</h3>
-              <p>Mit Heute, Datumsauswahl oder Pfeilen wird die passende Kalenderwoche geöffnet. Der Wochenkopf bleibt
-                beim Scrollen sichtbar.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-label">02</span>
-            <div>
-              <h3>Rezepte wählen oder vorschlagen lassen</h3>
-              <p>Die Bibliothek filtert nach Gang, Typ, Ernährung, Kategorie, Favorit und Saison. Vorschläge
-                berücksichtigen Historie, Saison und Wochenmix.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-label">03</span>
-            <div>
-              <h3>Kalenderhinweise einbeziehen</h3>
-              <p>Outlook-ICS-Termine können übernommen werden. Pro Tag erscheinen kompakte Hinweise, damit die Menüwahl
-                zum Tagesprogramm passt.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-label">04</span>
-            <div>
-              <h3>Einkaufsliste erstellen</h3>
-              <p>Zutaten aus Vorspeise, Hauptgang und Dessert werden zusammengeführt, bereinigt und nach Warengruppen
-                gruppiert.</p>
-            </div>
-          </li>
-          <li>
-            <span class="step-label">05</span>
-            <div>
-              <h3>Plan drucken</h3>
-              <p>Die Druckansicht bringt vier Wochen auf eine A4-Seite, inklusive Typ, Personen, Kalenderhinweisen,
-                Beilagen und Zusatzgängen.</p>
-            </div>
-          </li>
-        </ol>
+          <ol class="process-steps">
+            <li>
+              <span class="step-label">01</span>
+              <div>
+                <h3>Woche öffnen</h3>
+                <p>Mit Heute, Datumsauswahl oder Pfeilen wird die passende Kalenderwoche geöffnet. Der Wochenkopf bleibt beim Scrollen sichtbar.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">02</span>
+              <div>
+                <h3>Rezepte wählen oder vorschlagen lassen</h3>
+                <p>Die Bibliothek filtert nach Gang, Typ, Ernährung, Kategorie, Favorit und Saison. Vorschläge berücksichtigen Historie, Saison und Wochenmix.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">03</span>
+              <div>
+                <h3>Kalenderhinweise einbeziehen</h3>
+                <p>Outlook-ICS-Termine können übernommen werden. Pro Tag erscheinen kompakte Hinweise, damit die Menüwahl zum Tagesprogramm passt.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">04</span>
+              <div>
+                <h3>Einkaufsliste erstellen</h3>
+                <p>Zutaten aus Vorspeise, Hauptgang und Dessert werden zusammengeführt, bereinigt und nach Warengruppen gruppiert.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">05</span>
+              <div>
+                <h3>Plan drucken</h3>
+                <p>Die Druckansicht bringt vier Wochen auf eine A4-Seite, inklusive Typ, Personen, Kalenderhinweisen, Beilagen und Zusatzgängen.</p>
+              </div>
+            </li>
+          </ol>
       </div>
     </section>
 
@@ -140,44 +122,38 @@
       <div class="section-inner">
         <p class="eyebrow">Funktionen</p>
         <h2>Was der Menüplaner im Alltag übernimmt</h2>
-        <div class="product-feature-grid expanded">
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Wochenplan</span>
-            <h3>Schnell planen und sicher ändern</h3>
-            <p>Tage lassen sich befüllen, tauschen, sperren, korrigieren und wieder freigeben. Das ist für
-              wiederkehrende Haushaltsplanung wichtiger als eine grosse Projektverwaltung.</p>
-          </article>
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Rezepte</span>
-            <h3>Bibliothek mit Kontext</h3>
-            <p>Rezepte enthalten Gang, Typ, Kategorie, Ernährung, Saison, Favorit, Foto, Zutaten, Anleitung, Beilage,
-              Gemüse und Notizen. Die Werte helfen später beim Suchen und Vorschlagen.</p>
-          </article>
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Vorschläge</span>
-            <h3>Intelligente Rotation</h3>
-            <p>Die Vorschlagslogik vermeidet Wiederholungen im 28-Tage-Fenster, erkennt Menüfamilien, beachtet Saison
-              und mischt Fleisch, Fisch, Vegi oder Vegan ausgewogener.</p>
-          </article>
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Import</span>
-            <h3>Rezeptdaten schneller erfassen</h3>
-            <p>QR-Scan, URL-Import, Foto-Import und KI-Autofill helfen, neue Rezepte nicht mühsam von Hand abzutippen.
-            </p>
-          </article>
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Kalender</span>
-            <h3>Termine im Blick</h3>
-            <p>Ein Outlook-ICS-Kalender kann zyklisch geprüft werden. Neue, geänderte und gelöschte Termine werden
-              sichtbar, bevor sie übernommen werden.</p>
-          </article>
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Einkauf und Druck</span>
-            <h3>Vom Plan zur Küche</h3>
-            <p>Die Einkaufsliste fasst Zutaten zusammen. Die A4-Druckansicht macht den Plan auch ohne Bildschirm in der
-              Küche nutzbar.</p>
-          </article>
-        </div>
+          <div class="product-feature-grid expanded">
+            <article class="product-feature menueplan-feature">
+              <span class="feature-kicker">Wochenplan</span>
+              <h3>Schnell planen und sicher ändern</h3>
+              <p>Tage lassen sich befüllen, tauschen, sperren, korrigieren und wieder freigeben. Das ist für wiederkehrende Haushaltsplanung wichtiger als eine grosse Projektverwaltung.</p>
+            </article>
+            <article class="product-feature menueplan-feature">
+              <span class="feature-kicker">Rezepte</span>
+              <h3>Bibliothek mit Kontext</h3>
+              <p>Rezepte enthalten Gang, Typ, Kategorie, Ernährung, Saison, Favorit, Foto, Zutaten, Anleitung, Beilage, Gemüse und Notizen. Die Werte helfen später beim Suchen und Vorschlagen.</p>
+            </article>
+            <article class="product-feature menueplan-feature">
+              <span class="feature-kicker">Vorschläge</span>
+              <h3>Intelligente Rotation</h3>
+              <p>Die Vorschlagslogik vermeidet Wiederholungen im 28-Tage-Fenster, erkennt Menüfamilien, beachtet Saison und mischt Fleisch, Fisch, Vegi oder Vegan ausgewogener.</p>
+            </article>
+            <article class="product-feature menueplan-feature">
+              <span class="feature-kicker">Import</span>
+              <h3>Rezeptdaten schneller erfassen</h3>
+              <p>QR-Scan, URL-Import, Foto-Import und KI-Autofill helfen, neue Rezepte nicht mühsam von Hand abzutippen.</p>
+            </article>
+            <article class="product-feature menueplan-feature">
+              <span class="feature-kicker">Kalender</span>
+              <h3>Termine im Blick</h3>
+              <p>Ein Outlook-ICS-Kalender kann zyklisch geprüft werden. Neue, geänderte und gelöschte Termine werden sichtbar, bevor sie übernommen werden.</p>
+            </article>
+            <article class="product-feature menueplan-feature">
+              <span class="feature-kicker">Einkauf und Druck</span>
+              <h3>Vom Plan zur Küche</h3>
+              <p>Die Einkaufsliste fasst Zutaten zusammen. Die A4-Druckansicht macht den Plan auch ohne Bildschirm in der Küche nutzbar.</p>
+            </article>
+          </div>
       </div>
     </section>
 
@@ -185,33 +161,28 @@
       <div class="section-inner">
         <p class="eyebrow">Screenshots</p>
         <h2>Einblick in die Anwendung</h2>
-        <div class="screenshot-gallery">
-          <figure>
-            <img loading="lazy" src="/assets/img/products/menueplan-dashboard.png"
-              alt="Menüplaner Wochenansicht mit Tageskarten">
-            <figcaption>Wochenansicht: Tageskarten, Rezeptfilter und schnelle Aktionen in einer Oberfläche.</figcaption>
-          </figure>
-          <figure>
-            <img loading="lazy" src="/assets/img/products/menueplan-library.png" alt="Menüplaner Rezeptbibliothek">
-            <figcaption>Rezeptbibliothek: Filter, Sortierung, Foto-Import, QR-Scan, URL-Import und KI-Autofill.
-            </figcaption>
-          </figure>
-          <figure>
-            <img loading="lazy" src="/assets/img/products/menueplan-day-details.png" alt="Menüplaner Tagesdetails">
-            <figcaption>Tagesdetails: Vorspeise, Dessert, Beilage, Gemüse und Salat bleiben getrennt bearbeitbar.
-            </figcaption>
-          </figure>
-          <figure>
-            <img loading="lazy" src="/assets/img/products/menueplan-shopping.png" alt="Menüplaner Einkaufsliste">
-            <figcaption>Einkaufsliste: Zutaten werden aus dem Wochenplan abgeleitet und als eigene Ansicht geöffnet.
-            </figcaption>
-          </figure>
-          <figure>
-            <img loading="lazy" src="/assets/img/products/menueplan-settings.png" alt="Menüplaner Einstellungen">
-            <figcaption>Einstellungen: Starttag, Standardwerte, Kalender-Sync und Wartungsaktionen werden zentral
-              gepflegt.</figcaption>
-          </figure>
-        </div>
+          <div class="screenshot-gallery">
+            <figure>
+              <img loading="lazy" src="/assets/img/products/menueplan-dashboard.png" alt="Menüplaner Wochenansicht mit Tageskarten">
+              <figcaption>Wochenansicht: Tageskarten, Rezeptfilter und schnelle Aktionen in einer Oberfläche.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/menueplan-library.png" alt="Menüplaner Rezeptbibliothek">
+              <figcaption>Rezeptbibliothek: Filter, Sortierung, Foto-Import, QR-Scan, URL-Import und KI-Autofill.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/menueplan-day-details.png" alt="Menüplaner Tagesdetails">
+              <figcaption>Tagesdetails: Vorspeise, Dessert, Beilage, Gemüse und Salat bleiben getrennt bearbeitbar.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/menueplan-shopping.png" alt="Menüplaner Einkaufsliste">
+              <figcaption>Einkaufsliste: Zutaten werden aus dem Wochenplan abgeleitet und als eigene Ansicht geöffnet.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/menueplan-settings.png" alt="Menüplaner Einstellungen">
+              <figcaption>Einstellungen: Starttag, Standardwerte, Kalender-Sync und Wartungsaktionen werden zentral gepflegt.</figcaption>
+            </figure>
+          </div>
       </div>
     </section>
   </main>
@@ -221,8 +192,7 @@
       <div>
         <strong>Beat Arnet</strong>
         <p class="small">Adresse<br>Wydackerstrasse 41, 3052 Zollikofen</p>
-        <p class="small">Kontakt<br><a href="mailto:beat.arnet@bluewin.ch">beat.arnet@bluewin.ch</a><br>M: +41 79 321 89
-          36</p>
+        <p class="small">Kontakt<br><a href="mailto:beat.arnet@bluewin.ch">beat.arnet@bluewin.ch</a><br>M: +41 79 321 89 36</p>
       </div>
       <div class="footer-links">
         <a href="/privacy/">Datenschutz</a>
@@ -231,5 +201,5 @@
     </div>
   </footer>
 </body>
-
 </html>
+
