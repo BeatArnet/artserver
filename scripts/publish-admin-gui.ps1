@@ -26,6 +26,36 @@ function Write-Step {
   Write-Host "== $Text ==" -ForegroundColor Cyan
 }
 
+function Resolve-Tool {
+  param(
+    [string]$Label,
+    [string[]]$Candidates
+  )
+
+  foreach ($candidate in $Candidates) {
+    if (-not $candidate) {
+      continue
+    }
+    $command = Get-Command $candidate -ErrorAction SilentlyContinue
+    if ($command) {
+      if ($command.Path) {
+        return $command.Path
+      }
+      if ($command.Source) {
+        return $command.Source
+      }
+      if ($command.Definition) {
+        return $command.Definition
+      }
+    }
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+      return $candidate
+    }
+  }
+
+  throw "$Label wurde nicht gefunden. Geprüft: $($Candidates -join ', ')"
+}
+
 function Invoke-Checked {
   param(
     [string]$Program,
@@ -41,12 +71,63 @@ function Invoke-Checked {
   Push-Location $WorkingDirectory
   try {
     & $Program @Arguments
-    if ($LASTEXITCODE -ne 0) {
-      throw "$Program wurde mit Exitcode $LASTEXITCODE beendet."
+    $success = $?
+    $exitCode = $LASTEXITCODE
+    if (-not $success) {
+      throw "$Program konnte nicht erfolgreich ausgeführt werden."
+    }
+    if ($null -ne $exitCode -and $exitCode -ne 0) {
+      throw "$Program wurde mit Exitcode $exitCode beendet."
     }
   } finally {
     Pop-Location
   }
+}
+
+function Invoke-Captured {
+  param(
+    [string]$Program,
+    [string[]]$Arguments,
+    [string]$WorkingDirectory = $Root
+  )
+
+  $stdoutFile = New-TemporaryFile
+  $stderrFile = New-TemporaryFile
+  try {
+    $process = Start-Process `
+      -FilePath $Program `
+      -ArgumentList $Arguments `
+      -WorkingDirectory $WorkingDirectory `
+      -NoNewWindow `
+      -Wait `
+      -PassThru `
+      -RedirectStandardOutput $stdoutFile `
+      -RedirectStandardError $stderrFile
+
+    $stdout = Get-Content -LiteralPath $stdoutFile -Raw -ErrorAction SilentlyContinue
+    $stderr = Get-Content -LiteralPath $stderrFile -Raw -ErrorAction SilentlyContinue
+    if ($process.ExitCode -ne 0) {
+      throw "$Program wurde mit Exitcode $($process.ExitCode) beendet. $stderr"
+    }
+    return $stdout
+  } finally {
+    Remove-Item -LiteralPath $stdoutFile, $stderrFile -Force -ErrorAction SilentlyContinue
+  }
+}
+
+function Get-GitBranchFromHead {
+  param([string]$RepositoryRoot)
+
+  $headPath = Join-Path $RepositoryRoot ".git\HEAD"
+  if (-not (Test-Path -LiteralPath $headPath -PathType Leaf)) {
+    return ""
+  }
+
+  $head = (Get-Content -LiteralPath $headPath -Raw).Trim()
+  if ($head -match '^ref:\s+refs/heads/(.+)$') {
+    return $Matches[1]
+  }
+  return ""
 }
 
 function Assert-SafeGitName {
@@ -59,6 +140,18 @@ function Assert-SafeGitName {
 Assert-SafeGitName $Branch "Branch"
 Assert-SafeGitName $Remote "Remote"
 
+$PythonExe = Resolve-Tool "Python" @(
+  "python",
+  "py",
+  (Join-Path $env:LOCALAPPDATA "Programs\Python\Python312\python.exe")
+)
+$GitExe = Resolve-Tool "Git" @(
+  "git",
+  "C:\Program Files\Git\cmd\git.exe",
+  "C:\Program Files\Git\bin\git.exe",
+  "C:\Program Files (x86)\Git\cmd\git.exe"
+)
+
 if (-not (Test-Path -LiteralPath (Join-Path $Root ".git") -PathType Container)) {
   throw "Dieses Skript muss im artserver-Git-Repository liegen: $Root"
 }
@@ -68,7 +161,7 @@ if (-not (Test-Path -LiteralPath $DeployScript -PathType Leaf)) {
 }
 
 Write-Step "Pruefungen"
-Invoke-Checked "python" @("-m", "py_compile", "admin-gui\app.py")
+Invoke-Checked $PythonExe @("-m", "py_compile", "admin-gui\app.py")
 
 $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
 if ($nodeCommand -and (Test-Path -LiteralPath (Join-Path $Root "admin-gui\static\editor.js") -PathType Leaf)) {
@@ -76,12 +169,22 @@ if ($nodeCommand -and (Test-Path -LiteralPath (Join-Path $Root "admin-gui\static
 }
 
 Write-Step "Git-Stand"
-$currentBranch = (& git -C $Root branch --show-current).Trim()
-if ($currentBranch -ne $Branch) {
+$currentBranch = (Get-GitBranchFromHead $Root)
+if (-not $currentBranch) {
+  $currentBranch = (Invoke-Captured $GitExe @("-C", $Root, "branch", "--show-current")).Trim()
+}
+if (-not $currentBranch) {
+  $message = "Aktueller Git-Branch konnte nicht ermittelt werden."
+  if ($DryRun) {
+    Write-Host $message -ForegroundColor Yellow
+  } else {
+    throw $message
+  }
+} elseif ($currentBranch -ne $Branch) {
   throw "Aktueller Branch ist '$currentBranch', erwartet ist '$Branch'. Bitte zuerst wechseln oder -Branch angeben."
 }
 
-$status = (& git -C $Root status --porcelain)
+$status = (Invoke-Captured $GitExe @("-C", $Root, "status", "--porcelain"))
 if ($status -and -not $SkipCommit) {
   if (-not $CommitMessage.Trim()) {
     Write-Host "Es gibt lokale Aenderungen. Bitte mit -CommitMessage eine Commit-Nachricht angeben." -ForegroundColor Yellow
@@ -90,8 +193,8 @@ if ($status -and -not $SkipCommit) {
     throw "Abgebrochen: keine Commit-Nachricht."
   }
 
-  Invoke-Checked "git" @("add", "admin-gui", "deploy/artserver/admin", "scripts/publish-admin-gui.ps1", "scripts/start-admin-gui-local.cmd", "publish-admin-gui.cmd", "artserver-admin.ps1", "artserver-apps.json", "artserver-script-catalog.json", "admin-gui/README.md", "deploy/artserver/admin/README.md")
-  Invoke-Checked "git" @("commit", "-m", $CommitMessage)
+  Invoke-Checked $GitExe @("add", "admin-gui", "deploy/artserver/admin", "scripts/publish-admin-gui.ps1", "scripts/start-admin-gui-local.cmd", "start-admin-gui.cmd", ".vscode/tasks.json", "publish-admin-gui.cmd", "artserver-admin.ps1", "artserver-apps.json", "artserver-script-catalog.json", "admin-gui/README.md", "deploy/artserver/admin/README.md")
+  Invoke-Checked $GitExe @("commit", "-m", $CommitMessage)
 } elseif ($status) {
   Write-Host "Lokale Aenderungen bleiben uncommitted, weil -SkipCommit gesetzt ist." -ForegroundColor Yellow
   $status | ForEach-Object { Write-Host $_ }
@@ -101,7 +204,7 @@ if ($status -and -not $SkipCommit) {
 
 if (-not $SkipPush) {
   Write-Step "Nach GitHub pushen"
-  Invoke-Checked "git" @("push", $Remote, $Branch)
+  Invoke-Checked $GitExe @("push", $Remote, $Branch)
 }
 
 if (-not $SkipDeploy) {
@@ -128,18 +231,12 @@ if (-not $SkipDeploy) {
     Write-Host ("> ssh -tt $Server $remoteCommand") -ForegroundColor DarkGray
   }
   if (-not $DryRun) {
-    & scp $DeployScript "$Server`:$remoteScript"
-    if ($LASTEXITCODE -ne 0) {
-      throw "Deploy-Skript konnte nicht auf artserver kopiert werden."
-    }
+    Invoke-Checked "scp" @($DeployScript, "$Server`:$remoteScript")
 
     if ($NonInteractiveSudo) {
-      & ssh $Server $remoteCommand
+      Invoke-Checked "ssh" @($Server, $remoteCommand)
     } else {
-      & ssh -tt $Server $remoteCommand
-    }
-    if ($LASTEXITCODE -ne 0) {
-      throw "Deploy auf artserver ist fehlgeschlagen."
+      Invoke-Checked "ssh" @("-tt", $Server, $remoteCommand)
     }
   }
 }
