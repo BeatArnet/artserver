@@ -1,18 +1,19 @@
 ---
 title: Menüplaner
-description: Der private Menüplaner organisiert Wochenmenüs, Rezeptbibliothek, Einkaufsliste, Kalenderhinweise und Druckausgabe.
+description: Der private Menüplaner organisiert Wochenmenüs, Rezeptbibliothek, intelligente Vorschläge, Kalenderhinweise, Einkaufsliste, Importfunktionen und Druckausgabe.
 path: /menueplaner/
 ---
   <main class="product-page menueplan-page">
     <section class="product-hero product-hero-light" style="--hero-image: url('/assets/img/products/menueplan-dashboard.png')">
       <div class="hero-inner">
         <div class="product-hero-copy">
-          <p class="product-badge">Private PWA</p>
+          <p class="product-badge">{{ text:menueplaner.hero.badge }}</p>
           <h1>Menüplaner</h1>
-          <p class="lead">Wochenmenüs, Rezepte, Einkauf und Kalender in einer ruhigen Arbeitsoberfläche.</p>
-          <p>Der Menüplaner ersetzt Excel-Planung durch eine reaktive Web-App. Er unterstützt Wochenplanung, Rezeptbibliothek, automatische Vorschläge, Kalenderhinweise, Einkaufsliste und eine kompakte Druckausgabe für die Küche.</p>
+          <p class="lead">{{ text:menueplaner.hero.lead }}</p>
+          <p>{{ text:menueplaner.hero.body }}</p>
           <div class="actions">
             <a class="button primary" href="https://arnet.internet-box.ch:4443/">Anwendung öffnen</a>
+            <a class="button" href="https://github.com/BeatArnet/Menueplan">GitHub-Dokumentation</a>
             <a class="button" href="/produkte/">Zur Produktübersicht</a>
           </div>
         </div>
@@ -22,15 +23,10 @@ path: /menueplaner/
     <section class="section product-band menueplan-band">
       <div class="section-inner product-layout">
         <div>
-          <p class="eyebrow">Alltagstauglich</p>
-          <h2>Planen, kochen, einkaufen</h2>
-          <p>Die Oberfläche ist auf wiederholte Nutzung ausgelegt: Tageskarten, Rezeptvorschläge, Auto-Speichern, Sperren von Wochen und schnelle Navigation halten die Planung leichtgewichtig.</p>
-          <ul class="plain-list">
-            <li>8-Tage-Ansicht mit Vorschau auf die Folgewoche</li>
-            <li>Rezeptbibliothek mit Favoriten, Kategorien, Ernährung und Fotos</li>
-            <li>Intelligente Vorschläge mit Saison, Wiederholungslogik und Feiertagsbezug</li>
-            <li>Einkaufsliste, Kalender-Sync und A4-Druck</li>
-          </ul>
+          <p class="eyebrow">{{ text:menueplaner.daily.eyebrow }}</p>
+          <h2>{{ text:menueplaner.daily.title }}</h2>
+{{ paragraphs:menueplaner.daily.body }}
+{{ list:menueplaner.daily.points }}
         </div>
         <div class="product-screen light-screen">
           <img src="/assets/img/products/menueplan-library.png" alt="Menüplaner Rezeptbibliothek">
@@ -38,25 +34,27 @@ path: /menueplaner/
       </div>
     </section>
 
+    <section class="section process-section">
+      <div class="section-inner">
+        <p class="eyebrow">Ablauf</p>
+        <h2>Vom Wochenplan zur Einkaufsliste</h2>
+{{ steps:menueplaner.steps }}
+      </div>
+    </section>
+
     <section class="section product-feature-section">
       <div class="section-inner">
-        <div class="product-feature-grid">
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Wochenplan</span>
-            <h3>Struktur ohne Aufwand</h3>
-            <p>Die Woche lässt sich schnell befüllen, sperren, verschieben und korrigieren. Änderungen werden automatisch gespeichert.</p>
-          </article>
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Rezepte</span>
-            <h3>Bibliothek mit Kontext</h3>
-            <p>Rezepte enthalten Typ, Saison, Ernährung, Foto, Zutaten und Notizen. Vorschläge berücksichtigen Nutzung, Rhythmus und Abwechslung.</p>
-          </article>
-          <article class="product-feature menueplan-feature">
-            <span class="feature-kicker">Haushalt</span>
-            <h3>Einkauf und Termine</h3>
-            <p>Zutaten werden zu Einkaufslisten zusammengeführt. Kalenderhinweise erscheinen direkt im Tagesfeld und helfen bei realistischen Menüs.</p>
-          </article>
-        </div>
+        <p class="eyebrow">Funktionen</p>
+        <h2>Was der Menüplaner im Alltag übernimmt</h2>
+{{ cards:menueplaner.features:menueplan-feature }}
+      </div>
+    </section>
+
+    <section class="section gallery-section">
+      <div class="section-inner">
+        <p class="eyebrow">Screenshots</p>
+        <h2>Einblick in die Anwendung</h2>
+{{ gallery:menueplaner.gallery }}
       </div>
     </section>
   </main>

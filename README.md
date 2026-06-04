@@ -4,7 +4,7 @@ Dieses Repository sammelt die lokalen Hilfsdateien und Notizen für die Installa
 
 ## Aktueller Stand
 
-- Die Website ist statisch und wird lokal aus `content/pages/*.html` nach `dist/` gebaut.
+- Die Website ist statisch und wird lokal aus `content/pages/*.html` und `content/textbausteine.toml` nach `dist/` gebaut.
 - Die öffentliche Domain `arkons.ch` bleibt vorerst noch bei Localsearch.
 - Auf `artserver` ist eine interne Vorschau aktiv:
   - `http://192.168.1.136/`
@@ -102,7 +102,7 @@ Hinweis zu Menüpunkt `26`: Wenn der Ablauf scheinbar stehen bleibt, wartet Linu
 
 ## Typischer Ablauf nach einer Website-Aenderung
 
-1. Datei in `content/pages/`, `content/site.json`, `assets/` oder `downloads/` anpassen.
+1. Datei in `content/textbausteine.toml`, `content/pages/`, `content/site.json`, `assets/` oder `downloads/` anpassen.
 2. Admin-Menue starten:
 
 ```powershell
@@ -113,7 +113,7 @@ Hinweis zu Menüpunkt `26`: Wenn der Ablauf scheinbar stehen bleibt, wartet Linu
 4. Optional Menuepunkt `2` ausführen und lokal ansehen:
 
 ```text
-http://127.0.0.1:4173/
+http://127.0.0.1:18005/
 ```
 
 5. Menuepunkt `3` ausführen, um die Vorschau auf `artserver` zu aktualisieren.
@@ -128,6 +128,7 @@ http://192.168.1.136/
 ## Dateien und Struktur
 
 - `content/pages/*.html`: einzelne Inhaltsseiten
+- `content/textbausteine.toml`: einfacher Text-Baukasten für häufige Textänderungen
 - `content/site.json`: Navigation, Footer und Basisdaten
 - `templates/base.html`: gemeinsames HTML-Grundlayout
 - `assets/css/styles.css`: gemeinsame Gestaltung
@@ -146,6 +147,7 @@ http://192.168.1.136/
 - `docs/artserver-skriptordnung.md`: Einordnung der wichtigen, alten und zu archivierenden Skripte
 - `docs/docker-portainer-sorgfalt.md`: Anleitung, was Portainer kann und wie man Docker vorsichtig verwaltet
 - `docs/server-neuinstallation-checkliste.md`: Checkliste für einen späteren Neuaufbau von `artserver`
+- `docs/webseiten-baukasten.md`: kurze Anleitung für einfache Text-, Bild- und Seitenpflege
 
 ## Neue Seite anlegen
 
@@ -163,7 +165,8 @@ python scripts/build.py
 
 ## Seite ändern oder löschen
 
-- Ändern: passende Datei unter `content/pages/` bearbeiten und neu bauen.
+- Normale Textänderung: zuerst `content/textbausteine.toml` bearbeiten und neu bauen.
+- Struktur ändern: passende Datei unter `content/pages/` bearbeiten und neu bauen.
 - Löschen: Datei unter `content/pages/` entfernen und passende Navigationseinträge aus `content/site.json` entfernen.
 - Bilder: unter `assets/img/` ablegen und mit absolutem Webpfad verlinken, z. B. `/assets/img/products/beispiel.png`.
 - Anwendungen: nur Links und Beschreibungstexte in dieser Website anpassen. Die Anwendungen selbst liegen separat auf `artserver`.

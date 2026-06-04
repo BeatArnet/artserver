@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RoboWait | Beat Arnet</title>
-  <meta name="description" content="RoboWait unterstützt Laborexperimente von Einladung und Terminbuchung bis Fragebogen, Prozesssteuerung und Export.">
+  <title>RoboWait | arkons.ch</title>
+  <meta name="description" content="RoboWait unterstützt Laborexperimente von Einladung und Consent über Terminbuchung, Laborsteuerung und Fragebögen bis Export und Audit.">
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/styles.css">
 </head>
@@ -12,8 +12,8 @@
   <header class="site-header">
     <div class="header-inner">
       <a class="brand" href="/">
-        <img src="/assets/img/arkons-logo.png" alt="Beat Arnet Logo">
-        <span>Beat Arnet</span>
+        <img src="/assets/img/arkons-logo.png" alt="arkons.ch Logo">
+        <span>arkons.ch</span>
       </a>
       <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Navigation anzeigen">
       <label class="nav-button" for="nav-toggle">
@@ -41,10 +41,11 @@
         <div class="product-hero-copy">
           <p class="product-badge">BFH Laborexperiment</p>
           <h1>RoboWait</h1>
-          <p class="lead">Digitale Prozessunterstützung für "Robots in the Waiting Room".</p>
-          <p>RoboWait bildet den kompletten Studienablauf ab: Einladung, Consent, Terminbuchung, Randomisierung, Fragebögen, Laborsteuerung, Exporte und Audit. Die Anwendung reduziert manuelle Koordination und macht Prozessentscheidungen nachvollziehbar.</p>
+          <p class="lead">Digitale Prozessunterstützung für Studien, bei denen Teilnehmende, Laborbetrieb, Fragebögen und Robotik sauber zusammenspielen müssen.</p>
+          <p>RoboWait wurde für das BFH-Laborexperiment &quot;Robots in the Waiting Room&quot; entwickelt. Die Anwendung bildet den ganzen Studienweg ab: Einladung, Teilnahmeentscheid, Einwilligung, Terminbuchung, Labor-Session, Randomisierung, Fragebögen, Export und Audit. Damit wird aus E-Mails, Tabellen und manuellen Entscheiden ein versionierter, prüfbarer Ablauf.</p>
           <div class="actions">
             <a class="button primary" href="https://robowait.arkons.ch/">Anwendung öffnen</a>
+            <a class="button" href="https://github.com/BeatArnet/RoboWait">GitHub-Dokumentation</a>
             <a class="button" href="/produkte/">Zur Produktübersicht</a>
           </div>
         </div>
@@ -55,13 +56,16 @@
       <div class="section-inner product-layout">
         <div>
           <p class="eyebrow">Studienbetrieb</p>
-          <h2>Vom Kontakt zur auswertbaren Session</h2>
-          <p>Teilnehmende sehen nur die gerade freigegebenen Schritte. Experimentatorinnen und Experimentatoren steuern den Labortag im Dashboard. Administratorinnen und Administratoren verwalten Probanden, Slots, Blueprints, Mailvorlagen, Fragebögen und Exporte.</p>
+          <h2>Ein System vom ersten Kontakt bis zur Auswertung</h2>
+          <p>Teilnehmende sehen nur die Schritte, die für sie gerade freigegeben sind. Das Studienteam sieht im Dashboard, welche Personen eingeladen wurden, wer zugesagt oder abgelehnt hat, welche Termine gebucht sind und wo eine manuelle Aktion nötig ist.</p>
+          <p>Admins pflegen Probanden, Slots, Mailvorlagen, Fragebögen, Blueprints, Benutzer, Einstellungen und Exporte. Kritische Statuswechsel bleiben im Audit-Protokoll nachvollziehbar.</p>
           <ul class="plain-list">
-            <li>Rollengetrennte Bereiche für Teilnehmende, Studienleitung, Labor und Administration</li>
-            <li>Versionierte Prozesslogik mit Entscheidungs- und Timer-Schritten</li>
-            <li>Randomisierung, Audit-Protokoll und strukturierte Exportpakete</li>
-            <li>Realtime-Komponenten für operative Laborsteuerung</li>
+            <li>Login, Consent, Demografie, Terminbuchung und Fragebögen im Probandenbereich</li>
+            <li>Adminbereich für Probandenverwaltung, Slot-Planung, Mail-Templates, Blueprints, Fragebögen, Statistik und Audit</li>
+            <li>Randomisierung mit einfacher, blockweiser oder manueller Zuteilung</li>
+            <li>Exportpakete für Studien-, Kontakt-, Codebook-, Prozess- und Rohantwortdaten</li>
+            <li>Realtime-Unterstützung mit Laravel Reverb für operative Laborsteuerung</li>
+            <li>Scheduler für automatische Mails und Timer-Schritte</li>
           </ul>
         </div>
         <div class="product-screen dark-screen">
@@ -70,25 +74,115 @@
       </div>
     </section>
 
+    <section class="section process-section">
+      <div class="section-inner">
+        <p class="eyebrow">Ablauf</p>
+        <h2>So führt RoboWait durch die Studie</h2>
+          <ol class="process-steps">
+            <li>
+              <span class="step-label">01</span>
+              <div>
+                <h3>Einladen und Antworten erfassen</h3>
+                <p>Signierte Links für Zusage oder Absage schreiben die Antwort direkt in den Workflow. Das verhindert spätere Nachträge aus verstreuten Mails.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">02</span>
+              <div>
+                <h3>Einwilligung und Termin</h3>
+                <p>Teilnehmende erledigen Consent, Demografie und Terminbuchung im eigenen Bereich. Änderungen wie Umbuchungen bleiben im System sichtbar.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">03</span>
+              <div>
+                <h3>Labortag steuern</h3>
+                <p>Experimentatorinnen und Experimentatoren sehen aktive Sessions, Laborstationen und den nächsten freigegebenen Schritt.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">04</span>
+              <div>
+                <h3>Roboter und Bedingung einbinden</h3>
+                <p>Der Robotereinsatz ist Teil des Studienablaufs und kann mit Gruppenzuteilung, Wartephase und Fragebogen verbunden werden.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-label">05</span>
+              <div>
+                <h3>Exportieren und prüfen</h3>
+                <p>Nach der Durchführung stehen getrennte Exportpakete für Statistik, Kontakte, Codebook, Prozesslog und Rohantworten bereit.</p>
+              </div>
+            </li>
+          </ol>
+      </div>
+    </section>
+
     <section class="section product-feature-section">
       <div class="section-inner">
-        <div class="product-feature-grid">
-          <article class="product-feature">
-            <span class="feature-kicker">Workflow</span>
-            <h3>Blueprints statt Checklisten</h3>
-            <p>Der Studienablauf wird als Prozessmodell geführt. Statuswechsel, No-Shows, Zusagen, Absagen und abgeschlossene Schritte bleiben historisch nachvollziehbar.</p>
-          </article>
-          <article class="product-feature">
-            <span class="feature-kicker">Datengrundlage</span>
-            <h3>Exporte für Auswertung</h3>
-            <p>Studien-, Kontakt-, Rohantwort-, Codebook- und Prozessdaten können getrennt exportiert werden. Das erleichtert Pilot- und Folgeauswertungen.</p>
-          </article>
-          <article class="product-feature">
-            <span class="feature-kicker">Labor</span>
-            <h3>Robotik eingebunden</h3>
-            <p>Der Robotereinsatz ist in den Ablauf integrierbar und kann mit Laborstationen, Gruppenlogik und Fragebogen-Schritten verbunden werden.</p>
-          </article>
-        </div>
+        <p class="eyebrow">Funktionen</p>
+        <h2>Mehr als Terminverwaltung</h2>
+          <div class="product-feature-grid expanded">
+            <article class="product-feature">
+              <span class="feature-kicker">Blueprints</span>
+              <h3>Ablauf modellieren statt hart verdrahten</h3>
+              <p>Der Studienprozess wird als Blueprint geführt. Schritte, Rollen, Entscheidungen, Timer, Fragebögen und Mailaktionen können geändert werden, ohne laufende oder abgeschlossene Sessions unsichtbar zu verfälschen.</p>
+            </article>
+            <article class="product-feature">
+              <span class="feature-kicker">Versionierung</span>
+              <h3>Historische Abläufe bleiben erhalten</h3>
+              <p>Neue Blueprint-Versionen können aktiviert werden, während abgeschlossene Fälle mit der tatsächlich verwendeten Version verbunden bleiben. Das ist für spätere Auswertungen entscheidend.</p>
+            </article>
+            <article class="product-feature">
+              <span class="feature-kicker">Teilnehmende</span>
+              <h3>Einfacher Probandenbereich</h3>
+              <p>Der Probandenbereich zeigt nur die aktuell relevanten Aufgaben. So bleibt der Ablauf trotz komplexer Studienlogik verständlich.</p>
+            </article>
+            <article class="product-feature">
+              <span class="feature-kicker">Labor</span>
+              <h3>Dashboard für den Studientag</h3>
+              <p>Offene Aufgaben, aktive Sessions, nächste Schritte und Laborstationen werden im Dashboard sichtbar. Das reduziert spontane Koordination am Labortag.</p>
+            </article>
+            <article class="product-feature">
+              <span class="feature-kicker">Daten</span>
+              <h3>Saubere Exportpakete</h3>
+              <p>Studienwerte, Kontaktdaten, Rohantworten, Codebook und Prozesslog werden getrennt exportiert. Das erleichtert Statistik und Datenschutz.</p>
+            </article>
+            <article class="product-feature">
+              <span class="feature-kicker">Betrieb</span>
+              <h3>Web, Reverb und Scheduler</h3>
+              <p>RoboWait besteht im Betrieb aus Weboberfläche, Realtime-Dienst und Hintergrundverarbeitung. Dadurch können sichtbare Arbeit, Live-Status und automatische Schritte getrennt geprüft werden.</p>
+            </article>
+          </div>
+      </div>
+    </section>
+
+    <section class="section gallery-section">
+      <div class="section-inner">
+        <p class="eyebrow">Screenshots</p>
+        <h2>Einblick in die Anwendung</h2>
+          <div class="screenshot-gallery">
+            <figure>
+              <img loading="lazy" src="/assets/img/products/robowait-dashboard.png" alt="RoboWait Dashboard mit anstehenden Aufgaben">
+              <figcaption>Dashboard: aktuelle Aufgaben, aktiver Blueprint und operative Hinweise für den Studientag.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/robowait-participant-home.png" alt="RoboWait Probandenbereich mit freigegebenen Schritten">
+              <figcaption>Probandenbereich: nur die freigegebenen Schritte sind sichtbar und direkt bearbeitbar.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/robowait-blueprint-editor.png" alt="RoboWait Blueprint-Editor mit grafischer Prozess-Timeline">
+              <figcaption>Blueprint-Editor: Ablauf, Version und Prozessbausteine werden nachvollziehbar gepflegt.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/robowait-exports.png" alt="RoboWait Exportseite mit mehreren CSV-Paketen">
+              <figcaption>Export: Studien-, Kontakt-, Codebook-, Prozess- und Rohantwortdaten sind getrennt abrufbar.</figcaption>
+            </figure>
+            <figure>
+              <img loading="lazy" src="/assets/img/products/robowait-robot-panel.png" alt="RoboWait Robot-Mobility-Panel">
+              <figcaption>Robotik: Steuer- und Statusfunktionen können als Teil des experimentellen Settings eingebunden werden.</figcaption>
+            </figure>
+          </div>
       </div>
     </section>
   </main>
@@ -96,7 +190,7 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <div>
-        <strong>Beat Arnet</strong>
+        <strong>arkons.ch</strong>
         <p class="small">Adresse<br>Wydackerstrasse 41, 3052 Zollikofen</p>
         <p class="small">Kontakt<br><a href="mailto:beat.arnet@bluewin.ch">beat.arnet@bluewin.ch</a><br>M: +41 79 321 89 36</p>
       </div>

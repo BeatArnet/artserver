@@ -12,6 +12,6 @@ if errorlevel 1 (
 )
 
 echo.
-echo Starte die Website unter http://127.0.0.1:4173/
-start "" "http://127.0.0.1:4173/"
-python -m http.server 4173 --directory dist
+echo Starte die Website unter http://127.0.0.1:18005/
+start "" "http://127.0.0.1:18005/"
+python -m http.server 18005 --directory dist

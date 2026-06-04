@@ -25,7 +25,7 @@ $RoboWaitRoot = Join-Path $ProjectsRoot "RoboWait"
 $RoboWaitAdminScript = Join-Path $RoboWaitRoot "scripts\robowait-admin.cmd"
 $Server = "art@artserver"
 $PreviewUrl = "http://192.168.1.136/"
-$LocalUrl = "http://127.0.0.1:4173/"
+$LocalUrl = "http://127.0.0.1:18005/"
 $PortainerUrl = "https://192.168.1.136:9443/"
 
 $MenuHelp = @(
@@ -40,7 +40,7 @@ $MenuHelp = @(
   [pscustomobject]@{
     Choice = "2"
     Name = "Website lokal anzeigen"
-    Description = "Baut die Website und startet einen lokalen Webserver unter http://127.0.0.1:4173/. Das Fenster offen lassen; mit Ctrl+C beenden."
+    Description = "Baut die Website und startet einen lokalen Webserver unter http://127.0.0.1:18005/. Das Fenster offen lassen; mit Ctrl+C beenden."
     UseWhen = "Wenn du die Änderung zuerst auf diesem Windows-Rechner anschauen willst."
     Effect = "Startet lokal Python http.server; artserver bleibt unverändert."
     Risk = "Niedrig"
@@ -396,7 +396,7 @@ function Start-LocalPreview {
   Write-Host "Öffne $LocalUrl"
   Start-Process $LocalUrl
   Write-Host "Der lokale Webserver läuft, bis dieses Fenster mit Ctrl+C beendet wird."
-  Invoke-Checked "python" @("-m", "http.server", "4173", "--directory", "dist")
+  Invoke-Checked "python" @("-m", "http.server", "18005", "--directory", "dist")
 }
 
 function Publish-ArtserverPreview {

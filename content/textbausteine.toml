@@ -1,0 +1,209 @@
+[home.hero]
+title = "arkons.ch"
+lead = "Pragmatische Beratung, Prozesswissen und praxistaugliche Software im Gesundheitswesen - von Beat Arnet."
+
+[produkte]
+robowait_summary = "RoboWait unterstützt ein BFH-Laborexperiment von der Einladung über Consent, Terminbuchung und Laborsteuerung bis zu Fragebogen, Export und Audit. Die Anwendung ersetzt viele einzelne Listen und Mails durch einen nachvollziehbaren digitalen Prozess."
+menueplaner_summary = "Der Menüplaner ist eine private Web-App für den Küchenalltag: Wochenmenüs, Rezeptbibliothek, intelligente Vorschläge, Outlook-Kalenderhinweise, Einkaufsliste, Druckansicht und PWA-Nutzung auf Handy, Tablet oder PC."
+
+[robowait.hero]
+badge = "BFH Laborexperiment"
+lead = "Digitale Prozessunterstützung für Studien, bei denen Teilnehmende, Laborbetrieb, Fragebögen und Robotik sauber zusammenspielen müssen."
+body = "RoboWait wurde für das BFH-Laborexperiment \"Robots in the Waiting Room\" entwickelt. Die Anwendung bildet den ganzen Studienweg ab: Einladung, Teilnahmeentscheid, Einwilligung, Terminbuchung, Labor-Session, Randomisierung, Fragebögen, Export und Audit. Damit wird aus E-Mails, Tabellen und manuellen Entscheiden ein versionierter, prüfbarer Ablauf."
+
+[robowait.study]
+eyebrow = "Studienbetrieb"
+title = "Ein System vom ersten Kontakt bis zur Auswertung"
+body = [
+  "Teilnehmende sehen nur die Schritte, die für sie gerade freigegeben sind. Das Studienteam sieht im Dashboard, welche Personen eingeladen wurden, wer zugesagt oder abgelehnt hat, welche Termine gebucht sind und wo eine manuelle Aktion nötig ist.",
+  "Admins pflegen Probanden, Slots, Mailvorlagen, Fragebögen, Blueprints, Benutzer, Einstellungen und Exporte. Kritische Statuswechsel bleiben im Audit-Protokoll nachvollziehbar."
+]
+points = [
+  "Login, Consent, Demografie, Terminbuchung und Fragebögen im Probandenbereich",
+  "Adminbereich für Probandenverwaltung, Slot-Planung, Mail-Templates, Blueprints, Fragebögen, Statistik und Audit",
+  "Randomisierung mit einfacher, blockweiser oder manueller Zuteilung",
+  "Exportpakete für Studien-, Kontakt-, Codebook-, Prozess- und Rohantwortdaten",
+  "Realtime-Unterstützung mit Laravel Reverb für operative Laborsteuerung",
+  "Scheduler für automatische Mails und Timer-Schritte"
+]
+
+[[robowait.steps]]
+label = "01"
+title = "Einladen und Antworten erfassen"
+body = "Signierte Links für Zusage oder Absage schreiben die Antwort direkt in den Workflow. Das verhindert spätere Nachträge aus verstreuten Mails."
+
+[[robowait.steps]]
+label = "02"
+title = "Einwilligung und Termin"
+body = "Teilnehmende erledigen Consent, Demografie und Terminbuchung im eigenen Bereich. Änderungen wie Umbuchungen bleiben im System sichtbar."
+
+[[robowait.steps]]
+label = "03"
+title = "Labortag steuern"
+body = "Experimentatorinnen und Experimentatoren sehen aktive Sessions, Laborstationen und den nächsten freigegebenen Schritt."
+
+[[robowait.steps]]
+label = "04"
+title = "Roboter und Bedingung einbinden"
+body = "Der Robotereinsatz ist Teil des Studienablaufs und kann mit Gruppenzuteilung, Wartephase und Fragebogen verbunden werden."
+
+[[robowait.steps]]
+label = "05"
+title = "Exportieren und prüfen"
+body = "Nach der Durchführung stehen getrennte Exportpakete für Statistik, Kontakte, Codebook, Prozesslog und Rohantworten bereit."
+
+[[robowait.features]]
+kicker = "Blueprints"
+title = "Ablauf modellieren statt hart verdrahten"
+body = "Der Studienprozess wird als Blueprint geführt. Schritte, Rollen, Entscheidungen, Timer, Fragebögen und Mailaktionen können geändert werden, ohne laufende oder abgeschlossene Sessions unsichtbar zu verfälschen."
+
+[[robowait.features]]
+kicker = "Versionierung"
+title = "Historische Abläufe bleiben erhalten"
+body = "Neue Blueprint-Versionen können aktiviert werden, während abgeschlossene Fälle mit der tatsächlich verwendeten Version verbunden bleiben. Das ist für spätere Auswertungen entscheidend."
+
+[[robowait.features]]
+kicker = "Teilnehmende"
+title = "Einfacher Probandenbereich"
+body = "Der Probandenbereich zeigt nur die aktuell relevanten Aufgaben. So bleibt der Ablauf trotz komplexer Studienlogik verständlich."
+
+[[robowait.features]]
+kicker = "Labor"
+title = "Dashboard für den Studientag"
+body = "Offene Aufgaben, aktive Sessions, nächste Schritte und Laborstationen werden im Dashboard sichtbar. Das reduziert spontane Koordination am Labortag."
+
+[[robowait.features]]
+kicker = "Daten"
+title = "Saubere Exportpakete"
+body = "Studienwerte, Kontaktdaten, Rohantworten, Codebook und Prozesslog werden getrennt exportiert. Das erleichtert Statistik und Datenschutz."
+
+[[robowait.features]]
+kicker = "Betrieb"
+title = "Web, Reverb und Scheduler"
+body = "RoboWait besteht im Betrieb aus Weboberfläche, Realtime-Dienst und Hintergrundverarbeitung. Dadurch können sichtbare Arbeit, Live-Status und automatische Schritte getrennt geprüft werden."
+
+[[robowait.gallery]]
+src = "/assets/img/products/robowait-dashboard.png"
+alt = "RoboWait Dashboard mit anstehenden Aufgaben"
+caption = "Dashboard: aktuelle Aufgaben, aktiver Blueprint und operative Hinweise für den Studientag."
+
+[[robowait.gallery]]
+src = "/assets/img/products/robowait-participant-home.png"
+alt = "RoboWait Probandenbereich mit freigegebenen Schritten"
+caption = "Probandenbereich: nur die freigegebenen Schritte sind sichtbar und direkt bearbeitbar."
+
+[[robowait.gallery]]
+src = "/assets/img/products/robowait-blueprint-editor.png"
+alt = "RoboWait Blueprint-Editor mit grafischer Prozess-Timeline"
+caption = "Blueprint-Editor: Ablauf, Version und Prozessbausteine werden nachvollziehbar gepflegt."
+
+[[robowait.gallery]]
+src = "/assets/img/products/robowait-exports.png"
+alt = "RoboWait Exportseite mit mehreren CSV-Paketen"
+caption = "Export: Studien-, Kontakt-, Codebook-, Prozess- und Rohantwortdaten sind getrennt abrufbar."
+
+[[robowait.gallery]]
+src = "/assets/img/products/robowait-robot-panel.png"
+alt = "RoboWait Robot-Mobility-Panel"
+caption = "Robotik: Steuer- und Statusfunktionen können als Teil des experimentellen Settings eingebunden werden."
+
+[menueplaner.hero]
+badge = "Private PWA"
+lead = "Wochenmenüs, Rezepte, Einkauf, Kalender und Druck in einer App, die für den echten Küchenalltag gebaut ist."
+body = "Der Menüplaner ersetzt die frühere Excel-Planung durch eine reaktive Web-App. Er hilft beim schnellen Befüllen einer Woche, beim Wiederfinden bewährter Rezepte, beim Vermeiden von Wiederholungen, beim Einbezug von Kalenderterminen und beim Erstellen einer Einkaufsliste."
+
+[menueplaner.daily]
+eyebrow = "Alltagstauglich"
+title = "Planen, kochen, einkaufen - ohne Tabellenpflege"
+body = [
+  "Die Startansicht zeigt eine 8-Tage-Planung mit Vorschau auf die Folgewoche. Änderungen werden automatisch gespeichert, lassen sich rückgängig machen und können bei Bedarf durch eine Wochensperre geschützt werden.",
+  "Rezepte können aus der Bibliothek übernommen, per Drag and Drop auf Tage gezogen oder als intelligente Vorschläge eingesetzt werden. Beilagen, Gemüse, Salat, Vorspeise und Dessert bleiben als eigene Informationen erhalten."
+]
+points = [
+  "Wochenwechsel ohne Speicherdialog dank Auto-Speichern",
+  "Tageskarten mit Hauptgang, Beilage, Gemüse, Salat, Vorspeise und Dessert",
+  "Wochensperre gegen versehentliche Änderungen",
+  "Undo und Redo für Korrekturen",
+  "Einheitliche Nutzung auf PC, Tablet und Smartphone",
+  "PWA-Installation für schnellen Start wie eine App"
+]
+
+[[menueplaner.steps]]
+label = "01"
+title = "Woche öffnen"
+body = "Mit Heute, Datumsauswahl oder Pfeilen wird die passende Kalenderwoche geöffnet. Der Wochenkopf bleibt beim Scrollen sichtbar."
+
+[[menueplaner.steps]]
+label = "02"
+title = "Rezepte wählen oder vorschlagen lassen"
+body = "Die Bibliothek filtert nach Gang, Typ, Ernährung, Kategorie, Favorit und Saison. Vorschläge berücksichtigen Historie, Saison und Wochenmix."
+
+[[menueplaner.steps]]
+label = "03"
+title = "Kalenderhinweise einbeziehen"
+body = "Outlook-ICS-Termine können übernommen werden. Pro Tag erscheinen kompakte Hinweise, damit die Menüwahl zum Tagesprogramm passt."
+
+[[menueplaner.steps]]
+label = "04"
+title = "Einkaufsliste erstellen"
+body = "Zutaten aus Vorspeise, Hauptgang und Dessert werden zusammengeführt, bereinigt und nach Warengruppen gruppiert."
+
+[[menueplaner.steps]]
+label = "05"
+title = "Plan drucken"
+body = "Die Druckansicht bringt vier Wochen auf eine A4-Seite, inklusive Typ, Personen, Kalenderhinweisen, Beilagen und Zusatzgängen."
+
+[[menueplaner.features]]
+kicker = "Wochenplan"
+title = "Schnell planen und sicher ändern"
+body = "Tage lassen sich befüllen, tauschen, sperren, korrigieren und wieder freigeben. Das ist für wiederkehrende Haushaltsplanung wichtiger als eine grosse Projektverwaltung."
+
+[[menueplaner.features]]
+kicker = "Rezepte"
+title = "Bibliothek mit Kontext"
+body = "Rezepte enthalten Gang, Typ, Kategorie, Ernährung, Saison, Favorit, Foto, Zutaten, Anleitung, Beilage, Gemüse und Notizen. Die Werte helfen später beim Suchen und Vorschlagen."
+
+[[menueplaner.features]]
+kicker = "Vorschläge"
+title = "Intelligente Rotation"
+body = "Die Vorschlagslogik vermeidet Wiederholungen im 28-Tage-Fenster, erkennt Menüfamilien, beachtet Saison und mischt Fleisch, Fisch, Vegi oder Vegan ausgewogener."
+
+[[menueplaner.features]]
+kicker = "Import"
+title = "Rezeptdaten schneller erfassen"
+body = "QR-Scan, URL-Import, Foto-Import und KI-Autofill helfen, neue Rezepte nicht mühsam von Hand abzutippen."
+
+[[menueplaner.features]]
+kicker = "Kalender"
+title = "Termine im Blick"
+body = "Ein Outlook-ICS-Kalender kann zyklisch geprüft werden. Neue, geänderte und gelöschte Termine werden sichtbar, bevor sie übernommen werden."
+
+[[menueplaner.features]]
+kicker = "Einkauf und Druck"
+title = "Vom Plan zur Küche"
+body = "Die Einkaufsliste fasst Zutaten zusammen. Die A4-Druckansicht macht den Plan auch ohne Bildschirm in der Küche nutzbar."
+
+[[menueplaner.gallery]]
+src = "/assets/img/products/menueplan-dashboard.png"
+alt = "Menüplaner Wochenansicht mit Tageskarten"
+caption = "Wochenansicht: Tageskarten, Rezeptfilter und schnelle Aktionen in einer Oberfläche."
+
+[[menueplaner.gallery]]
+src = "/assets/img/products/menueplan-library.png"
+alt = "Menüplaner Rezeptbibliothek"
+caption = "Rezeptbibliothek: Filter, Sortierung, Foto-Import, QR-Scan, URL-Import und KI-Autofill."
+
+[[menueplaner.gallery]]
+src = "/assets/img/products/menueplan-day-details.png"
+alt = "Menüplaner Tagesdetails"
+caption = "Tagesdetails: Vorspeise, Dessert, Beilage, Gemüse und Salat bleiben getrennt bearbeitbar."
+
+[[menueplaner.gallery]]
+src = "/assets/img/products/menueplan-shopping.png"
+alt = "Menüplaner Einkaufsliste"
+caption = "Einkaufsliste: Zutaten werden aus dem Wochenplan abgeleitet und als eigene Ansicht geöffnet."
+
+[[menueplaner.gallery]]
+src = "/assets/img/products/menueplan-settings.png"
+alt = "Menüplaner Einstellungen"
+caption = "Einstellungen: Starttag, Standardwerte, Kalender-Sync und Wartungsaktionen werden zentral gepflegt."
