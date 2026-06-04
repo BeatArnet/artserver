@@ -245,6 +245,7 @@ ssh -t art@artserver "sudo bash /home/art/arkons/deploy/apply-arkons-preview.sh"
 Das Skript:
 
 - prüft, ob `/home/art/arkons/www/current/index.html` existiert,
+- öffnet bei aktiver `ufw`-Firewall die LAN-Ports `8088` und `18005` für `192.168.1.0/24`,
 - legt Backups unter `/etc/caddy/backups/` an,
 - schreibt nur `/etc/caddy/sites-enabled/arkons-preview.caddy`,
 - validiert Caddy,

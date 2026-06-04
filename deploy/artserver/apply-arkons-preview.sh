@@ -18,6 +18,11 @@ fi
 
 install -d -m 755 "$BACKUP_DIR"
 
+if command -v ufw >/dev/null 2>&1 && ufw status | grep -q '^Status: active'; then
+  ufw allow from 192.168.1.0/24 to any port 8088 proto tcp comment 'arkons preview 8088 LAN'
+  ufw allow from 192.168.1.0/24 to any port 18005 proto tcp comment 'arkons preview 18005 LAN'
+fi
+
 if [[ -f /etc/caddy/Caddyfile ]]; then
   cp -a /etc/caddy/Caddyfile "$BACKUP_DIR/Caddyfile.$STAMP"
 fi
