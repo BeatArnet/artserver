@@ -90,6 +90,7 @@
       "scriptIds": [
         "admin.artserver.menu",
         "admin.gui.publish.deploy",
+        "admin.gui.update.github",
         "legacy.artserver.ssh.shell",
         "legacy.artserver.services.status",
         "legacy.artserver.scripts.list",

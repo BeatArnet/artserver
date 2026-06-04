@@ -77,6 +77,41 @@
       }
     },
     {
+      "id": "admin.gui.update.github",
+      "group": "artserver",
+      "label": "Admin-GUI aus GitHub auf artserver aktualisieren",
+      "source": "/home/art/arkons/deploy/artserver/deploy/artserver/admin/deploy-admin-gui-from-github.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "ADMINGUI",
+      "summary": "Aktualisiert die auf artserver laufende Admin-GUI aus dem GitHub-Repository.",
+      "details": "Dieser Menüpunkt ist für die Admin-GUI auf artserver gedacht. Er setzt voraus, dass die lokalen Änderungen bereits nach GitHub gepusht wurden. Danach holt artserver den aktuellen Stand, prüft die Python-Dateien und startet den Dienst arkons-admin-web neu. Der Web-Start verwendet den einmalig installierten sudo-Helfer und fragt im Browser kein sudo-Passwort ab.",
+      "whenToUse": "Wenn der neue Admin-GUI-Stand bereits in GitHub liegt und auf artserver übernommen werden soll.",
+      "beforeStart": [
+        "Prüfen, dass die gewünschten Änderungen bereits nach GitHub gepusht wurden.",
+        "Der sudo-Helfer muss einmalig installiert sein: .\\publish-admin-gui.cmd -CommitMessage \"Admin-GUI sudo-Helfer installieren\" -InstallSudoHelper",
+        "GitHub-Zugang auf artserver muss funktionieren, falls das Repository nicht anonym lesbar ist."
+      ],
+      "effect": [
+        "artserver holt den aktuellen Stand aus GitHub.",
+        "admin-gui/app.py wird mit Python geprüft.",
+        "Der Dienst arkons-admin-web wird neu eingerichtet oder neu gestartet.",
+        "Die LAN/VPN-Route zur Admin-GUI wird geprüft oder erneuert."
+      ],
+      "successCriteria": [
+        "Das Skript endet ohne Fehler.",
+        "Der Dienst arkons-admin-web ist aktiv.",
+        "Die Admin-GUI ist im LAN/VPN unter http://192.168.1.136:18110/ erreichbar."
+      ],
+      "rollback": "Bei Fehlern das Web-Job-Log lesen. Auf artserver kann ein älterer Git-Stand ausgecheckt und der Dienst arkons-admin-web neu gestartet werden.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/home/art/arkons/deploy/artserver",
+        "command": "ARKONS_ADMIN_SUDO='sudo -n' bash deploy/artserver/admin/deploy-admin-gui-from-github.sh"
+      }
+    },
+    {
       "id": "admin.robowait.menu",
       "group": "Projekt-Admin-Einstiege",
       "label": "RoboWait Admin-Menü",
