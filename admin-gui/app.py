@@ -300,6 +300,41 @@ def local_command(run: dict, dry_run: bool, parameters: dict[str, str]) -> tuple
     return [program, *args], cwd, True
 
 
+def local_tool_path_entries() -> list[str]:
+    if not platform.system().lower().startswith("win"):
+        return []
+
+    entries = [
+        Path(sys.executable).parent,
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Python" / "Python312",
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Git" / "cmd",
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "Git" / "bin",
+        Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "OpenSSH",
+        Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32",
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "PowerShell" / "7",
+    ]
+    return [str(path) for path in entries if str(path) and path.exists()]
+
+
+def job_environment() -> dict[str, str]:
+    env = os.environ.copy()
+    extra_path = local_tool_path_entries()
+    if extra_path:
+        existing = env.get("PATH", "")
+        existing_parts = [part for part in existing.split(os.pathsep) if part]
+        normalized_existing = {part.lower() for part in existing_parts}
+        additions = []
+        for part in extra_path:
+            normalized = part.lower()
+            if normalized in normalized_existing:
+                continue
+            additions.append(part)
+            normalized_existing.add(normalized)
+        if additions:
+            env["PATH"] = os.pathsep.join([*additions, *existing_parts])
+    return env
+
+
 def build_execution(script: dict, dry_run: bool, runner_path: Path, confirmation: str, parameters: dict[str, str]) -> tuple[list[str], Path, bool]:
     run = script.get("run") or {}
     run_type = run.get("type")
@@ -1874,6 +1909,7 @@ class Handler(BaseHTTPRequestHandler):
             result = subprocess.run(
                 command,
                 cwd=str(cwd),
+                env=job_environment(),
                 capture_output=True,
                 text=True,
                 timeout=3600,
