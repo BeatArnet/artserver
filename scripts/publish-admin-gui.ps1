@@ -151,6 +151,14 @@ $GitExe = Resolve-Tool "Git" @(
   "C:\Program Files\Git\bin\git.exe",
   "C:\Program Files (x86)\Git\cmd\git.exe"
 )
+$ScpExe = Resolve-Tool "scp" @(
+  "scp",
+  "C:\Windows\System32\OpenSSH\scp.exe"
+)
+$SshExe = Resolve-Tool "ssh" @(
+  "ssh",
+  "C:\Windows\System32\OpenSSH\ssh.exe"
+)
 
 if (-not (Test-Path -LiteralPath (Join-Path $Root ".git") -PathType Container)) {
   throw "Dieses Skript muss im artserver-Git-Repository liegen: $Root"
@@ -231,12 +239,12 @@ if (-not $SkipDeploy) {
     Write-Host ("> ssh -tt $Server $remoteCommand") -ForegroundColor DarkGray
   }
   if (-not $DryRun) {
-    Invoke-Checked "scp" @($DeployScript, "$Server`:$remoteScript")
+    Invoke-Checked $ScpExe @($DeployScript, "$Server`:$remoteScript")
 
     if ($NonInteractiveSudo) {
-      Invoke-Checked "ssh" @($Server, $remoteCommand)
+      Invoke-Checked $SshExe @($Server, $remoteCommand)
     } else {
-      Invoke-Checked "ssh" @("-tt", $Server, $remoteCommand)
+      Invoke-Checked $SshExe @("-tt", $Server, $remoteCommand)
     }
   }
 }
