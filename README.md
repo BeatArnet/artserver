@@ -8,10 +8,10 @@ Dieses Repository sammelt die lokalen Hilfsdateien und Notizen für die Installa
 - Die öffentliche Domain `arkons.ch` bleibt vorerst noch bei Localsearch.
 - Auf `artserver` ist eine interne Vorschau aktiv:
   - `http://192.168.1.136/`
-  - `http://192.168.1.136:18005/`
   - `http://192.168.1.136/produkte/`
   - `http://192.168.1.136/robowait/`
   - `http://192.168.1.136/menueplaner/`
+- Das Caddy-Vorschau-Skript bereitet zusätzlich `http://192.168.1.136:18005/` vor. Diese Zusatzroute ist aktiv, sobald Menüpunkt `4` die Caddy-Vorschau erneuert hat.
 - Die Meldung "Nicht sicher" ist in dieser Vorschau normal, weil sie absichtlich per HTTP im lokalen Netzwerk läuft.
 - Die spätere produktive HTTPS-Umschaltung auf `https://arkons.ch` erfolgt separat, erst wenn Localsearch wirklich abgelöst werden soll.
 
@@ -122,10 +122,15 @@ http://127.0.0.1:18005/
 
 ```text
 http://192.168.1.136/
+```
+
+7. Falls die Zusatzroute in der 18000-er Portreihe gewünscht ist, Menuepunkt `4` ausführen. Danach zusätzlich prüfen:
+
+```text
 http://192.168.1.136:18005/
 ```
 
-7. Menuepunkt `5` ausführen, um Arkons-Vorschau und bestehende Apps zu prüfen.
+8. Menuepunkt `5` ausführen, um Arkons-Vorschau und bestehende Apps zu prüfen.
 
 ## Dateien und Struktur
 
