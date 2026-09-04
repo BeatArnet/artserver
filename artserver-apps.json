@@ -212,7 +212,10 @@
           "url": "http://127.0.0.1:18004/api/server/ping"
         }
       ],
-      "scriptIds": [],
+      "scriptIds": [
+        "immich.update.check",
+        "immich.update.docker"
+      ],
       "humanNotes": "Immich verwaltet die Bildbibliothek und greift auf die Fotos des NAS zu. Die Admin-Oberfläche prüft den erreichbaren Webdienst; die NAS-Anbindung wird in Immich selbst kontrolliert.",
       "summary": "Bildverwaltung für die NAS-Fotos mit Statuscheck des Immich-Webdienstes."
     },

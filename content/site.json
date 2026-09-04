@@ -4,23 +4,53 @@
   "baseUrl": "https://www.arkons.ch",
   "address": "Wydackerstrasse 41, 3052 Zollikofen",
   "nav": [
-    { "label": "STARTSEITE", "url": "/" },
+    {
+      "label": "STARTSEITE",
+      "url": "/"
+    },
     {
       "label": "Produkte",
       "url": "/produkte/",
       "children": [
-        { "label": "Arzttarif-Assistent", "url": "/arzttarif-assistent/" },
-        { "label": "Simulation: von Tarmed zu TARDOC/Pauschalen", "url": "/Tarifvergleich/" },
-        { "label": "Spiel und Quiz Neuer Arzttarif", "url": "/Quiz_NeuerArzttarif/" },
-        { "label": "RoboWait", "url": "/robowait/" },
-        { "label": "Menüplaner", "url": "/menueplaner/" }
+        {
+          "label": "Arzttarif-Assistent",
+          "url": "/arzttarif-assistent/"
+        },
+        {
+          "label": "Simulation: von Tarmed zu TARDOC/Pauschalen",
+          "url": "/Tarifvergleich/"
+        },
+        {
+          "label": "Spiel und Quiz Neuer Arzttarif",
+          "url": "/Quiz_NeuerArzttarif/"
+        },
+        {
+          "label": "RoboWait",
+          "url": "/robowait/"
+        },
+        {
+          "label": "Menüplaner",
+          "url": "/menueplaner/"
+        }
       ]
     },
-    { "label": "ÜBER UNS", "url": "/uber-uns/" },
-    { "label": "KONTAKT", "url": "/kontakt/" }
+    {
+      "label": "ÜBER UNS",
+      "url": "/uber-uns/"
+    },
+    {
+      "label": "KONTAKT",
+      "url": "/kontakt/"
+    }
   ],
   "footerLinks": [
-    { "label": "Datenschutz", "url": "/privacy/" },
-    { "label": "Kontakt", "url": "/kontakt/" }
+    {
+      "label": "Datenschutz",
+      "url": "/privacy/"
+    },
+    {
+      "label": "Kontakt",
+      "url": "/kontakt/"
+    }
   ]
 }

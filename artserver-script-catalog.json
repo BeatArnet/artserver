@@ -164,6 +164,82 @@
       }
     },
     {
+      "id": "immich.update.check",
+      "group": "Immich",
+      "label": "Immich Update-Vorprüfung",
+      "source": "/home/art/arkons/deploy/artserver/deploy/artserver/docker/update-immich-docker.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "notes": "Prüft Docker, Compose-Datei, .env, Speicherplatz, Datenbank-Container, VectorChord-Voraussetzung und erreichbare Immich-Version. Es wird nichts verändert.",
+      "summary": "Prüft, ob das Immich-Docker-Update auf artserver sicher vorbereitet ist.",
+      "details": "Diese Vorprüfung liest die produktive Immich-Installation unter /opt/immich, ermittelt die aktuelle Version, fragt die neueste GitHub-Version ab und stoppt, wenn noch pgvecto.rs statt VectorChord erkennbar ist. Das ist besonders wichtig beim Sprung auf Immich v3.",
+      "whenToUse": "Vor jedem Immich-Update oder wenn die Admin-GUI ein verfügbares Immich-Update meldet.",
+      "beforeStart": [
+        "Keine besondere Vorbereitung nötig.",
+        "Wenn die Prüfung fehlschlägt, zuerst die Meldung lesen und das eigentliche Update nicht starten."
+      ],
+      "effect": [
+        "Es werden nur Prüfungen ausgeführt.",
+        "Es werden keine Container neu gestartet.",
+        "Es werden keine Dateien verändert."
+      ],
+      "successCriteria": [
+        "Die Ausgabe endet mit Check-only abgeschlossen.",
+        "Compose, Datenbank-Container und Speicherplatz werden ohne Fehler gemeldet.",
+        "Bei Zielversion v3 wird keine pgvecto.rs-Blockade gemeldet."
+      ],
+      "rollback": "Nicht nötig, da die Vorprüfung nichts verändert.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/home/art/arkons/deploy/artserver/deploy/artserver/docker",
+        "command": "bash update-immich-docker.sh --check-only --target v3",
+        "sudo": false
+      }
+    },
+    {
+      "id": "immich.update.docker",
+      "group": "Immich",
+      "label": "Immich Docker-Update installieren",
+      "source": "/home/art/arkons/deploy/artserver/deploy/artserver/docker/update-immich-docker.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "IMMICH",
+      "notes": "Produktives Immich-Update mit Datenbank-Dump, Sicherung von .env und docker-compose.yml, danach docker compose pull und up -d. Medien werden nicht kopiert; das bestehende Borg-/Dateisystembackup muss weiterhin separat funktionieren. Derselbe Menüpunkt kann für weitere normale Updates innerhalb der v3-Serie wieder verwendet werden: zuerst die Vorprüfung starten, dann diesen Update-Menüpunkt mit Schutzwort IMMICH. Bei einem späteren Major-Update wie v4 nicht blind starten; zuerst die Release Notes lesen und die Zielversion bewusst anpassen.",
+      "summary": "Installiert das vorbereitete Immich-Docker-Update auf artserver.",
+      "details": "Das Skript arbeitet im Immich-Ordner /opt/immich. Vor dem Update legt es einen schreibbaren manuellen Backup-Zeitstempelordner an, speichert .env, Compose-Konfiguration, Container-Infos und einen pg_dump der Immich-Datenbank. Wenn UPLOAD_LOCATION/backups root gehört, wird ein manueller Ordner daneben verwendet. Erst danach wird IMMICH_VERSION auf v3 gesetzt und der offizielle Docker-Compose-Updatepfad ausgeführt.",
+      "whenToUse": "Wenn die Vorprüfung erfolgreich war und Immich auf die aktuelle v3-Serie aktualisiert werden soll.",
+      "beforeStart": [
+        "Immich kurz nicht aktiv benutzen und mobile Uploads wenn möglich pausieren.",
+        "Vorprüfung Immich Update-Vorprüfung starten und Ergebnis lesen.",
+        "Kontrollieren, dass das normale Server-/Borg-Backup zuletzt erfolgreich war, weil Medien nicht in dieses Update-Backup kopiert werden.",
+        "Für weitere normale Updates innerhalb der v3-Serie kann derselbe Menüpunkt wieder verwendet werden.",
+        "Bei einem späteren Major-Update wie v4 nicht blind starten; zuerst Release Notes lesen und die Zielversion bewusst anpassen."
+      ],
+      "effect": [
+        "Es wird ein Datenbank-Dump erzeugt.",
+        ".env und docker-compose.yml werden in einem Update-Backup gesichert.",
+        "IMMICH_VERSION wird auf v3 gesetzt.",
+        "Docker lädt neue Images und startet die Immich-Container neu.",
+        "Der interne Immich-Ping wird nach dem Start geprüft."
+      ],
+      "successCriteria": [
+        "Das Skript endet mit Immich-Update abgeschlossen.",
+        "docker compose ps zeigt laufende Immich-Container.",
+        "http://127.0.0.1:18004/api/server/ping antwortet auf artserver.",
+        "Die Admin-GUI zeigt Immich wieder als erreichbar."
+      ],
+      "rollback": "Kein blindes Downgrade machen. Bei Problemen zuerst Job-Log und Docker-Logs lesen. Das Update-Backup enthält Datenbank-Dump und alte Konfiguration; eine Wiederherstellung muss passend zur Immich-Doku erfolgen und braucht weiterhin die unveränderten Medienordner.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/home/art/arkons/deploy/artserver/deploy/artserver/docker",
+        "command": "bash update-immich-docker.sh --target v3",
+        "sudo": false
+      }
+    },
+    {
       "id": "menueplan.update.github",
       "group": "Menüplan",
       "label": "Menüplan Docker-Update aus GitHub",
