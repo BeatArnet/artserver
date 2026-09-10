@@ -3,6 +3,124 @@
   "description": "Zentraler Arkons-Skriptkatalog. Diese Datei ist bewusst maschinenlesbar, damit später auch eine Weboberfläche daraus Buttons und Sicherheitsabfragen erzeugen kann.",
   "scripts": [
     {
+      "id": "admin.wingi.menu",
+      "group": "Projekt-Admin-Einstiege",
+      "label": "Wingi Admin-Menü im Terminal",
+      "source": "/usr/local/sbin/wingi-admin; {ProjectsRoot}\\Wingi\\ops\\wingi-admin.sh",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "",
+      "interactive": true,
+      "summary": "Öffnet die vorhandene Wingi-Verwaltung auf artserver.",
+      "notes": "Interaktives Terminal-Menü für Status, Sicherung, Update, Wiederherstellen und vollständiges Leeren. Wiederherstellen und Leeren verlangen ihre Schutzwörter. Im Browser die einzelnen Aktionen verwenden; dieser Menüeintrag benötigt ein Terminal.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/",
+        "command": "sudo /usr/local/sbin/wingi-admin",
+        "sudo": true
+      },
+      "lockScope": "wingi"
+    },
+    {
+      "id": "wingi.health",
+      "group": "Wingi",
+      "label": "Wingi Erreichbarkeit prüfen",
+      "source": "{ProjectsRoot}\\Wingi\\docker-compose.yml",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "summary": "Prüft den Wingi-Gesundheitscheck auf dem internen Port 18006.",
+      "notes": "Liest nur den Gesundheitsstatus. Startet keine Container neu und benötigt kein sudo.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/",
+        "command": "curl --fail --silent --show-error --max-time 10 http://127.0.0.1:18006/up >/dev/null && printf 'Wingi antwortet auf Port 18006.\\n'",
+        "sudo": false
+      }
+    },
+    {
+      "id": "wingi.status",
+      "group": "Wingi",
+      "label": "Wingi Status und letzte Sicherung",
+      "source": "/usr/local/sbin/wingi-admin",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "interactive": false,
+      "lockScope": "wingi",
+      "summary": "Zeigt Containerzustand, aktive Version, Datenbelegung und die letzte Sicherung.",
+      "notes": "Liest nur den Status. Ändert keine Daten und startet keine Container neu.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Wingi",
+        "command": "sudo -n /usr/local/sbin/wingi-admin status",
+        "sudo": true
+      }
+    },
+    {
+      "id": "wingi.backup",
+      "group": "Wingi",
+      "label": "Wingi jetzt sichern",
+      "source": "/usr/local/sbin/wingi-admin",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "mittel",
+      "requiresConfirmation": "WINGI",
+      "interactive": false,
+      "lockScope": "wingi",
+      "summary": "Sichert Datenbank, Medien, Exporte und Konfiguration.",
+      "notes": "Der Container wird für eine konsistente Sicherung kurz angehalten und danach wieder gestartet. Unveränderte Medien werden nach Möglichkeit per Hardlink übernommen. Sicherungen liegen unter /srv/wingi/backups und werden 30 Tage aufbewahrt.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Wingi",
+        "command": "sudo -n /usr/local/sbin/wingi-admin backup",
+        "sudo": true
+      }
+    },
+    {
+      "id": "wingi.update.github",
+      "group": "Wingi",
+      "label": "Wingi aus GitHub aktualisieren",
+      "source": "/usr/local/sbin/wingi-admin",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "hoch",
+      "requiresConfirmation": "WINGI",
+      "interactive": false,
+      "lockScope": "wingi",
+      "summary": "Sichert den aktuellen Stand, baut die neueste GitHub-Version und startet Wingi damit.",
+      "notes": "Datenbank, Medien und Konfiguration bleiben erhalten. Migrationen werden ausgeführt; bestehende Benutzer, Passwörter und Inventareinträge werden nicht neu angelegt oder mit Beispieldaten überschrieben. Bei einem fehlgeschlagenen Start wird die vorherige Version mit der Sicherung wiederhergestellt. Während Sicherung und Neustart ist Wingi kurz nicht erreichbar.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Wingi",
+        "command": "sudo -n /usr/local/sbin/wingi-admin update",
+        "sudo": true
+      }
+    },
+    {
+      "id": "wingi.logs",
+      "group": "Wingi",
+      "label": "Wingi letzte Logmeldungen",
+      "source": "/usr/local/sbin/wingi-admin",
+      "location": "artserver",
+      "enabled": true,
+      "risk": "niedrig",
+      "requiresConfirmation": "",
+      "interactive": false,
+      "lockScope": "wingi",
+      "summary": "Zeigt die letzten 100 Container-Logzeilen.",
+      "notes": "Begrenzte Momentaufnahme zur Fehlersuche. Kein endlos laufender Log-Stream; verändert keine Daten.",
+      "run": {
+        "type": "ServerShell",
+        "cwd": "/opt/apps/Wingi",
+        "command": "sudo -n /usr/local/sbin/wingi-admin logs-snapshot",
+        "sudo": true
+      }
+    },
+    {
       "id": "admin.artserver.menu",
       "group": "Projekt-Admin-Einstiege",
       "label": "Dashboard artserver",

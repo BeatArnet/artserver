@@ -16,7 +16,7 @@
     "overviewFacts": [
       {
         "label": "Anwendungen",
-        "value": "5 Container-Apps"
+        "value": "6 konfigurierte Apps"
       },
       {
         "label": "Runner",
@@ -249,6 +249,39 @@
       ],
       "humanNotes": "Portainer ist die Docker-Weboberfläche auf artserver. Es bekommt Zugriff auf den Docker-Socket und soll deshalb nur bewusst und im LAN/VPN genutzt werden.",
       "summary": "Docker-Weboberfläche für Container, Images, Volumes und Stacks auf artserver."
+    },
+    {
+      "id": "wingi",
+      "label": "Wingi",
+      "kind": "application",
+      "navigation": true,
+      "repository": "Wingi",
+      "containerNames": [
+        "Wingi"
+      ],
+      "internalUrls": [
+        "http://127.0.0.1:18006"
+      ],
+      "healthChecks": [
+        {
+          "id": "wingi.health",
+          "label": "Wingi Gesundheitscheck",
+          "type": "httpHead",
+          "url": "http://127.0.0.1:18006/up"
+        }
+      ],
+      "scriptIds": [
+        "wingi.status",
+        "wingi.health",
+        "wingi.backup",
+        "wingi.update.github",
+        "wingi.logs",
+        "admin.wingi.menu"
+      ],
+      "summary": "Camper-Inventar mit interaktivem 3D-Modell, Fächern, Dokumenten und Benutzerverwaltung. Auf artserver im LAN/VPN erreichbar.",
+      "humanNotes": "Programm unter /opt/apps/Wingi; Datenbank, Medien und Sicherungen dauerhaft unter /srv/wingi. Die produktive Konfiguration liegt unter /etc/wingi/wingi.env. Tägliche Sicherung um 03:15 Uhr mit bis zu 15 Minuten Verzögerung. Updates sichern zuerst und verändern keine bestehenden Passwörter oder Inventareinträge. Wiederherstellen und vollständiges Leeren bleiben im interaktiven Terminal-Menü geschützt.",
+      "github": "https://github.com/BeatArnet/Wingi",
+      "publicUrl": "http://192.168.1.136:18106/"
     },
     {
       "id": "robowait",
